@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>调试页面 - 联系我 SaaS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+  <div class="max-w-2xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">调试页面</h1>
+    
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+      <h2 class="text-lg font-semibold mb-4">Supabase 连接测试</h2>
+      <button id="testConnection" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500">
+        测试连接
+      </button>
+      <div id="connectionResult" class="mt-4 p-4 bg-gray-50 rounded hidden"></div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+      <h2 class="text-lg font-semibold mb-4">用户注册测试</h2>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-2">邮箱</label>
+          <input id="testEmail" type="email" class="w-full px-3 py-2 border rounded" placeholder="test@example.com">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-2">密码</label>
+          <input id="testPassword" type="password" class="w-full px-3 py-2 border rounded" placeholder="至少6位">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-2">姓名</label>
+          <input id="testName" type="text" class="w-full px-3 py-2 border rounded" placeholder="测试用户">
+        </div>
+        <button id="testSignup" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-500">
+          测试注册
+        </button>
+      </div>
+      <div id="signupResult" class="mt-4 p-4 bg-gray-50 rounded hidden"></div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+      <h2 class="text-lg font-semibold mb-4">数据库表检查</h2>
+      <button id="checkTables" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-500">
+        检查表结构
+      </button>
+      <div id="tablesResult" class="mt-4 p-4 bg-gray-50 rounded hidden"></div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+      <h2 class="text-lg font-semibold mb-4">控制台日志</h2>
+      <div id="consoleLog" class="h-64 overflow-y-auto bg-black text-green-400 p-4 rounded font-mono text-sm"></div>
+    </div>
+  </div>
+
+  <script src="/js/config.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script>
+    const cfg = window.__APP_CONFIG__;
+    let supabase = null;
+
+    function $(sel) { return document.querySelector(sel); }
+    function log(message) {
+      const console = $('#consoleLog');
+      const time = new Date().toLocaleTimeString();
+      console.innerHTML += `[${time}] ${message}\n`;
+      console.scrollTop = console.scrollHeight;
+    }
+
+    async function init() {
+      if (!cfg.supabaseUrl || !cfg.supabaseKey) {
+        log('❌ Supabase配置缺失');
+        return;
+      }
+      
+      supabase = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey);
+      log('✅ Supabase客户端初始化成功');
+      
+      setupEventListeners();
+    }
+
+    function setupEventListeners() {
+      $('#testConnection').addEventListener('click', testConnection);
+      $('#testSignup').addEventListener('click', testSignup);
+      $('#checkTables').addEventListener('click', checkTables);
+    }
+
+    async function testConnection() {
+      log('🔍 测试Supabase连接...');
+      try {
+        const { data, error } = await supabase.from('templates').select('count').limit(1);
+        if (error) {
+          log(`❌ 连接失败: ${error.message}`);
+          $('#connectionResult').innerHTML = `<div class="text-red-600">连接失败: ${error.message}</div>`;
+        } else {
+          log('✅ 连接成功');
+          $('#connectionResult').innerHTML = '<div class="text-green-600">连接成功！</div>';
+        }
+      } catch (err) {
+        log(`❌ 连接异常: ${err.message}`);
+        $('#connectionResult').innerHTML = `<div class="text-red-600">连接异常: ${err.message}</div>`;
+      }
+      $('#connectionResult').classList.remove('hidden');
+    }
+
+    async function testSignup() {
+      const email = $('#testEmail').value;
+      const password = $('#testPassword').value;
+      const name = $('#testName').value;
+
+      if (!email || !password || !name) {
+        log('❌ 请填写所有字段');
+        return;
+      }
+
+      log(`🔍 测试注册用户: ${email}`);
+      try {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { name }
+          }
+        });
+
+        if (error) {
+          log(`❌ 注册失败: ${error.message}`);
+          $('#signupResult').innerHTML = `<div class="text-red-600">注册失败: ${error.message}</div>`;
+        } else {
+          log(`✅ 注册成功: ${data.user?.id}`);
+          log(`📧 邮箱确认状态: ${data.user?.email_confirmed_at ? '已确认' : '待确认'}`);
+          
+          // 尝试创建用户资料
+          if (data.user) {
+            log('🔍 创建用户资料...');
+            const { error: profileError } = await supabase
+              .from('user_profiles')
+              .insert({
+                id: data.user.id,
+                email: email,
+                name: name
+              });
+            
+            if (profileError) {
+              log(`❌ 用户资料创建失败: ${profileError.message}`);
+            } else {
+              log('✅ 用户资料创建成功');
+            }
+          }
+          
+          $('#signupResult').innerHTML = '<div class="text-green-600">注册成功！</div>';
+        }
+      } catch (err) {
+        log(`❌ 注册异常: ${err.message}`);
+        $('#signupResult').innerHTML = `<div class="text-red-600">注册异常: ${err.message}</div>`;
+      }
+      $('#signupResult').classList.remove('hidden');
+    }
+
+    async function checkTables() {
+      log('🔍 检查数据库表结构...');
+      const tables = ['user_profiles', 'profiles', 'products', 'socials', 'templates'];
+      
+      for (const table of tables) {
+        try {
+          const { data, error } = await supabase.from(table).select('*').limit(1);
+          if (error) {
+            log(`❌ 表 ${table} 不存在或无法访问: ${error.message}`);
+          } else {
+            log(`✅ 表 ${table} 存在`);
+          }
+        } catch (err) {
+          log(`❌ 检查表 ${table} 异常: ${err.message}`);
+        }
+      }
+      
+      $('#tablesResult').innerHTML = '<div class="text-green-600">检查完成，请查看控制台日志</div>';
+      $('#tablesResult').classList.remove('hidden');
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

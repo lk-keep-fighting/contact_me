@@ -84,21 +84,7 @@
   </dialog>
 
   <!-- App Config & Scripts -->
-  <script>
-    window.__APP_CONFIG__ = {
-      // 替换为你的 Supabase 项目信息
-      supabaseUrl: "https://zmuaawzjscrexezgencu.supabase.co",
-      supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InptdWFhd3pqc2NyZXhlemdlbmN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAyNjczODQsImV4cCI6MjA3NTg0MzM4NH0.mNb3-SLgGIalH1szlpETInmpnoPHlMlg1Cbowe-wB0o",
-      // 页面加载哪个创始人：支持 ?handle=xxx 或 ?id=uuid
-      defaultHandle: "lowcode",
-      // 用于站外分享的默认文案
-      share: {
-        title: "低代码技术分享",
-        text: "专注低代码技术分享，助力开发者快速构建应用。欢迎交流学习！",
-        url: typeof location !== 'undefined' ? location.href : ""
-      }
-    };
-  </script>
+  <script src="/js/config.js"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script src="/js/app.js"></script>
 </body>

@@ -169,19 +169,27 @@ function applyData(data) {
 async function loadData() {
   const { handle, id } = parseQuery();
   const client = createClient();
+  
+  console.log('Loading data for:', { handle, id });
+  
   if (!client) {
+    console.log('No Supabase client, using fallback data');
     hydrateFallbackStatic();
     return;
   }
+  
   let query = client.from('profiles').select('*, products(*), socials(*)').limit(1);
   if (id) query = query.eq('id', id);
   else query = query.eq('handle', handle || cfg.defaultHandle);
+  
   const { data, error } = await query.single();
   if (error) {
     console.warn('Load from Supabase failed, fallback to demo', error);
     hydrateFallbackStatic();
     return;
   }
+  
+  console.log('Loaded data from Supabase:', data);
 
   const mapped = {
     name: data.name,

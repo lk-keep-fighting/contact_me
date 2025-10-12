@@ -272,7 +272,7 @@ async function saveProfile() {
     
     if (error) {
       console.error('更新资料失败:', error);
-      return;
+      throw error;
     }
   } else {
     // 创建新资料
@@ -284,7 +284,7 @@ async function saveProfile() {
     
     if (error) {
       console.error('创建资料失败:', error);
-      return;
+      throw error;
     }
     
     currentProfile = data;
@@ -293,6 +293,8 @@ async function saveProfile() {
   // 更新用户信息显示
   $('#userName').textContent = profileData.name || '用户';
   $('#userAvatar').src = profileData.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=user';
+  
+  return currentProfile;
 }
 
 // 保存社交链接
@@ -387,17 +389,30 @@ function clearProductForm() {
 
 // 预览页面
 function previewPage() {
-  if (!currentProfile) {
-    alert('请先保存基本信息');
+  const handle = $('#profileHandle').value;
+  if (!handle) {
+    alert('请先填写页面标识');
     return;
   }
   
-  const url = `/index.html?handle=${currentProfile.handle}&preview=true`;
-  window.open(url, '_blank');
+  // 先保存当前数据
+  saveProfile().then(() => {
+    const url = `/index.html?handle=${handle}&preview=true`;
+    window.open(url, '_blank');
+  });
 }
 
 // 发布页面
 async function publishPage() {
+  const handle = $('#profileHandle').value;
+  if (!handle) {
+    alert('请先填写页面标识');
+    return;
+  }
+  
+  // 先保存当前数据
+  await saveProfile();
+  
   if (!currentProfile) {
     alert('请先保存基本信息');
     return;
@@ -418,10 +433,17 @@ async function publishPage() {
 
 // 刷新预览
 function refreshPreview() {
-  if (!currentProfile) return;
+  const handle = $('#profileHandle').value;
+  if (!handle) {
+    alert('请先填写页面标识');
+    return;
+  }
   
-  const iframe = $('#previewFrame');
-  iframe.src = iframe.src;
+  // 先保存当前数据
+  saveProfile().then(() => {
+    const iframe = $('#previewFrame');
+    iframe.src = `/index.html?handle=${handle}&preview=true`;
+  });
 }
 
 // 编辑社交链接

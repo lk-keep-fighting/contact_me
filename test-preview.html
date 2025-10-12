@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>预览测试 - 联系我 SaaS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+  <div class="max-w-2xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">预览功能测试</h1>
+    
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+      <h2 class="text-lg font-semibold mb-4">测试预览链接</h2>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-2">页面标识 (handle)</label>
+          <input id="testHandle" type="text" class="w-full px-3 py-2 border rounded" placeholder="输入页面标识" value="demo">
+        </div>
+        <div class="flex space-x-4">
+          <button id="testPreview" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500">
+            测试预览
+          </button>
+          <button id="testDirect" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-500">
+            直接访问
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+      <h2 class="text-lg font-semibold mb-4">预览结果</h2>
+      <div id="previewResult" class="bg-gray-50 p-4 rounded">
+        <p class="text-gray-500">点击上方按钮测试预览功能</p>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+      <h2 class="text-lg font-semibold mb-4">调试信息</h2>
+      <div id="debugInfo" class="bg-black text-green-400 p-4 rounded font-mono text-sm h-64 overflow-y-auto">
+        <p>等待测试...</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/config.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script>
+    const cfg = window.__APP_CONFIG__;
+    let supabase = null;
+
+    function $(sel) { return document.querySelector(sel); }
+    function log(message) {
+      const debug = $('#debugInfo');
+      const time = new Date().toLocaleTimeString();
+      debug.innerHTML += `[${time}] ${message}\n`;
+      debug.scrollTop = debug.scrollHeight;
+    }
+
+    async function init() {
+      if (!cfg.supabaseUrl || !cfg.supabaseKey) {
+        log('❌ Supabase配置缺失');
+        return;
+      }
+      
+      supabase = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey);
+      log('✅ Supabase客户端初始化成功');
+      
+      setupEventListeners();
+    }
+
+    function setupEventListeners() {
+      $('#testPreview').addEventListener('click', testPreview);
+      $('#testDirect').addEventListener('click', testDirect);
+    }
+
+    async function testPreview() {
+      const handle = $('#testHandle').value;
+      if (!handle) {
+        log('❌ 请输入页面标识');
+        return;
+      }
+
+      log(`🔍 测试预览: ${handle}`);
+      
+      try {
+        // 检查数据库中是否存在该handle
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*, products(*), socials(*)')
+          .eq('handle', handle)
+          .single();
+        
+        if (error) {
+          log(`❌ 数据库查询失败: ${error.message}`);
+          $('#previewResult').innerHTML = `<div class="text-red-600">数据库查询失败: ${error.message}</div>`;
+          return;
+        }
+        
+        if (!data) {
+          log(`❌ 未找到页面: ${handle}`);
+          $('#previewResult').innerHTML = `<div class="text-red-600">未找到页面: ${handle}</div>`;
+          return;
+        }
+        
+        log(`✅ 找到页面数据: ${data.name}`);
+        $('#previewResult').innerHTML = `
+          <div class="text-green-600">
+            <h3 class="font-semibold">找到页面数据</h3>
+            <p>名称: ${data.name}</p>
+            <p>标题: ${data.title || '无'}</p>
+            <p>产品数量: ${data.products?.length || 0}</p>
+            <p>社交链接数量: ${data.socials?.length || 0}</p>
+            <p>发布状态: ${data.is_published ? '已发布' : '未发布'}</p>
+          </div>
+        `;
+        
+        // 打开预览页面
+        const url = `/index.html?handle=${handle}&preview=true`;
+        log(`🔗 打开预览页面: ${url}`);
+        window.open(url, '_blank');
+        
+      } catch (err) {
+        log(`❌ 测试异常: ${err.message}`);
+        $('#previewResult').innerHTML = `<div class="text-red-600">测试异常: ${err.message}</div>`;
+      }
+    }
+
+    async function testDirect() {
+      const handle = $('#testHandle').value;
+      if (!handle) {
+        log('❌ 请输入页面标识');
+        return;
+      }
+
+      const url = `/index.html?handle=${handle}`;
+      log(`🔗 直接访问: ${url}`);
+      window.open(url, '_blank');
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
