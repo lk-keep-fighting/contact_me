@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" content="#0ea5e9">
+  <title>联系我 SaaS - 管理后台</title>
+  <meta name="description" content="管理你的个人介绍页面，一键分享引流">
+  <link rel="icon" href="/favicon.svg">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --accent: #0ea5e9; }
+    html, body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+    .glass { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); background: rgba(255,255,255,0.7); }
+    .dark .glass { background: rgba(0,0,0,0.35); }
+  </style>
+</head>
+<body class="bg-gradient-to-b from-sky-50 to-white text-slate-800 dark:from-slate-950 dark:to-slate-900 dark:text-slate-100 min-h-screen">
+  <!-- 导航栏 -->
+  <nav class="glass border-b border-slate-200 dark:border-slate-700 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <div class="flex items-center">
+          <a href="/" class="text-xl font-bold text-sky-600">联系我 SaaS</a>
+        </div>
+        <div class="flex items-center space-x-4">
+          <button id="previewBtn" class="px-4 py-2 text-sm bg-sky-600 text-white rounded-lg hover:bg-sky-500">
+            <i class='bx bx-show align-[-2px]'></i> 预览
+          </button>
+          <button id="publishBtn" class="px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-500">
+            <i class='bx bx-send align-[-2px]'></i> 发布
+          </button>
+          <div class="flex items-center space-x-2">
+            <img id="userAvatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" alt="avatar" class="w-8 h-8 rounded-full">
+            <span id="userName" class="text-sm font-medium">用户名</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- 左侧：编辑区域 -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- 基本信息 -->
+        <div class="glass rounded-xl p-6 border border-slate-200 dark:border-slate-700">
+          <h2 class="text-lg font-semibold mb-4">基本信息</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium mb-2">姓名</label>
+              <input id="profileName" type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="你的姓名">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">身份/头衔</label>
+              <input id="profileTitle" type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="创业者 | 产品经理">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium mb-2">个人简介</label>
+              <textarea id="profileBio" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="简单介绍一下自己和你的专业领域..."></textarea>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">标签</label>
+              <input id="profileTags" type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="AI,创业,SaaS (用逗号分隔)">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">头像URL</label>
+              <input id="profileAvatar" type="url" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="https://example.com/avatar.jpg">
+            </div>
+          </div>
+        </div>
+
+        <!-- 联系方式 -->
+        <div class="glass rounded-xl p-6 border border-slate-200 dark:border-slate-700">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-semibold">联系方式</h2>
+            <button id="addSocialBtn" class="px-3 py-1 text-sm bg-sky-600 text-white rounded-lg hover:bg-sky-500">
+              <i class='bx bx-plus align-[-2px]'></i> 添加
+            </button>
+          </div>
+          <div id="socialsList" class="space-y-3">
+            <!-- 动态添加的社交链接 -->
+          </div>
+        </div>
+
+        <!-- 产品/服务 -->
+        <div class="glass rounded-xl p-6 border border-slate-200 dark:border-slate-700">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-semibold">产品/服务</h2>
+            <button id="addProductBtn" class="px-3 py-1 text-sm bg-sky-600 text-white rounded-lg hover:bg-sky-500">
+              <i class='bx bx-plus align-[-2px]'></i> 添加
+            </button>
+          </div>
+          <div id="productsList" class="space-y-4">
+            <!-- 动态添加的产品 -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 右侧：预览和设置 -->
+      <div class="space-y-6">
+        <!-- 页面预览 -->
+        <div class="glass rounded-xl p-6 border border-slate-200 dark:border-slate-700">
+          <h2 class="text-lg font-semibold mb-4">页面预览</h2>
+          <div class="bg-white rounded-lg border border-slate-200 p-4">
+            <iframe id="previewFrame" src="/index.html?handle=preview" class="w-full h-96 border-0 rounded"></iframe>
+          </div>
+          <div class="mt-4 text-center">
+            <button id="refreshPreview" class="px-4 py-2 text-sm bg-slate-100 hover:bg-slate-200 rounded-lg">
+              <i class='bx bx-refresh align-[-2px]'></i> 刷新预览
+            </button>
+          </div>
+        </div>
+
+        <!-- 页面设置 -->
+        <div class="glass rounded-xl p-6 border border-slate-200 dark:border-slate-700">
+          <h2 class="text-lg font-semibold mb-4">页面设置</h2>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium mb-2">页面标识</label>
+              <input id="profileHandle" type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="your-handle">
+              <p class="text-xs text-slate-500 mt-1">页面URL: your-domain.com/your-handle</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">主题色</label>
+              <input id="themeColor" type="color" value="#0ea5e9" class="w-full h-10 border border-slate-300 rounded-lg">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">CTA按钮</label>
+              <div class="grid grid-cols-2 gap-2">
+                <input id="ctaLabel" type="text" class="px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="按钮文字">
+                <input id="ctaUrl" type="url" class="px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="链接地址">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 数据统计 -->
+        <div class="glass rounded-xl p-6 border border-slate-200 dark:border-slate-700">
+          <h2 class="text-lg font-semibold mb-4">数据统计</h2>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="text-center">
+              <div class="text-2xl font-bold text-sky-600" id="viewCount">0</div>
+              <div class="text-sm text-slate-500">总访问量</div>
+            </div>
+            <div class="text-center">
+              <div class="text-2xl font-bold text-green-600" id="shareCount">0</div>
+              <div class="text-sm text-slate-500">总分享数</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 社交链接编辑模态框 -->
+  <dialog id="socialModal" class="rounded-2xl p-0 border border-slate-200 dark:border-slate-700 w-96">
+    <div class="p-6">
+      <h3 class="text-lg font-semibold mb-4">添加联系方式</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-2">平台</label>
+          <select id="socialPlatform" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent">
+            <option value="WeChat">微信</option>
+            <option value="WeChatOfficial">微信公众号</option>
+            <option value="Weibo">微博</option>
+            <option value="LinkedIn">LinkedIn</option>
+            <option value="Twitter">Twitter</option>
+            <option value="Email">邮箱</option>
+            <option value="Phone">电话</option>
+            <option value="QQ">QQ</option>
+            <option value="Custom">自定义</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-2">显示名称</label>
+          <input id="socialLabel" type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="个人微信">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-2">链接地址</label>
+          <input id="socialUrl" type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="https://... 或 mailto:...">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-2">二维码图片URL</label>
+          <input id="socialQr" type="url" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="https://example.com/qr.jpg">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-2">二维码说明</label>
+          <input id="socialQrNote" type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="长按保存二维码">
+        </div>
+      </div>
+    </div>
+    <div class="p-4 border-t border-slate-200 dark:border-slate-700 flex justify-end space-x-2">
+      <button id="cancelSocial" class="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50">取消</button>
+      <button id="saveSocial" class="px-4 py-2 text-sm bg-sky-600 text-white rounded-lg hover:bg-sky-500">保存</button>
+    </div>
+  </dialog>
+
+  <!-- 产品编辑模态框 -->
+  <dialog id="productModal" class="rounded-2xl p-0 border border-slate-200 dark:border-slate-700 w-96">
+    <div class="p-6">
+      <h3 class="text-lg font-semibold mb-4">添加产品/服务</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-2">产品名称</label>
+          <input id="productName" type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="我的产品">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-2">产品描述</label>
+          <textarea id="productDescription" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="产品功能介绍..."></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-2">产品图片URL</label>
+          <input id="productImage" type="url" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="https://example.com/product.jpg">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-2">产品链接</label>
+          <input id="productUrl" type="url" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="https://example.com/product">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-2">分享文案</label>
+          <input id="productShareText" type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="推荐这个产品给大家！">
+        </div>
+      </div>
+    </div>
+    <div class="p-4 border-t border-slate-200 dark:border-slate-700 flex justify-end space-x-2">
+      <button id="cancelProduct" class="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50">取消</button>
+      <button id="saveProduct" class="px-4 py-2 text-sm bg-sky-600 text-white rounded-lg hover:bg-sky-500">保存</button>
+    </div>
+  </dialog>
+
+  <!-- App Config & Scripts -->
+  <script>
+    window.__APP_CONFIG__ = {
+      supabaseUrl: "https://zmuawzjscrexezgencu.supabase.co",
+      supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InptdWFhd3pqc2NyZXhlemdlbmN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAyNjczODQsImV4cCI6MjA3NTg0MzM4NH0.mNb3-SLgGIalH1szlpETInmpnoPHlMlg1Cbowe-wB0o",
+      defaultHandle: "preview"
+    };
+  </script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

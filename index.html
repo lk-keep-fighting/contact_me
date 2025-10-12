@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" content="#0ea5e9">
+  <title>联系我 | 低代码分享</title>
+  <meta name="description" content="专注低代码技术分享，助力开发者快速构建应用。">
+  <link rel="icon" href="/favicon.svg">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --accent: #0ea5e9; }
+    html, body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+    .glass { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); background: rgba(255,255,255,0.7); }
+    .dark .glass { background: rgba(0,0,0,0.35); }
+  </style>
+</head>
+<body class="bg-gradient-to-b from-sky-50 to-white text-slate-800 dark:from-slate-950 dark:to-slate-900 dark:text-slate-100 min-h-screen">
+  <div class="max-w-xl mx-auto px-4 pb-20">
+    <!-- Header / Avatar -->
+    <header class="pt-10 text-center">
+      <div class="inline-block rounded-full p-[3px] bg-gradient-to-tr from-sky-500 to-fuchsia-500">
+        <img id="avatar" alt="avatar" class="h-24 w-24 rounded-full object-cover bg-white" src="" onerror="this.src='https://api.dicebear.com/7.x/identicon/svg?seed=founder'">
+      </div>
+      <h1 id="name" class="mt-4 text-2xl font-bold">创始人姓名</h1>
+      <p id="title" class="text-slate-500 dark:text-slate-400">身份 / 头衔</p>
+      <div id="badges" class="mt-3 flex items-center justify-center gap-2 flex-wrap"></div>
+      <div class="mt-4 flex items-center justify-center gap-3">
+        <button id="shareBtn" class="glass text-sm px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 hover:border-sky-400 hover:text-sky-600 dark:hover:text-sky-300 transition">
+          <i class='bx bx-share-alt align-[-2px]'></i> 一键分享
+        </button>
+        <a id="contactPrimary" href="#contacts" class="text-sm px-4 py-2 rounded-full bg-sky-600 text-white hover:bg-sky-500 transition">
+          立即联系
+        </a>
+      </div>
+    </header>
+
+    <!-- About -->
+    <section class="mt-8 glass rounded-xl p-5 border border-slate-200 dark:border-slate-700">
+      <h2 class="text-lg font-semibold mb-2">个人简介</h2>
+      <p id="bio" class="text-slate-600 dark:text-slate-300 leading-relaxed">我是一名专注于……的创业者，目前在打造……欢迎交流合作。</p>
+    </section>
+
+    <!-- Contacts -->
+    <section id="contacts" class="mt-6 grid gap-3">
+      <h2 class="text-lg font-semibold">联系方式</h2>
+      <div id="socialLinks" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+      <div id="qrGallery" class="mt-2 grid grid-cols-2 gap-3"></div>
+    </section>
+
+    <!-- Products -->
+    <section class="mt-8">
+      <h2 class="text-lg font-semibold">产品介绍</h2>
+      <div id="products" class="mt-3 grid gap-4"></div>
+    </section>
+
+    <!-- CTA -->
+    <section class="mt-10 text-center">
+      <a id="cta" href="#" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-sky-600 to-fuchsia-600 text-white font-semibold shadow hover:opacity-95">
+        立即体验产品 <i class='bx bx-right-arrow-alt text-xl'></i>
+      </a>
+      <p class="text-xs text-slate-500 mt-2">点击上方按钮直达产品或预约演示</p>
+    </section>
+
+    <footer class="mt-12 text-center text-xs text-slate-400">
+      <p>© <span id="year"></span> <span id="footerName">你的品牌</span>. Powered by Supabase.</p>
+    </footer>
+  </div>
+
+  <!-- QR Modal -->
+  <dialog id="qrModal" class="rounded-2xl p-0 border border-slate-200 dark:border-slate-700 w-80">
+    <div class="p-5">
+      <h3 id="qrTitle" class="font-semibold mb-2">扫码添加</h3>
+      <img id="qrImage" alt="QR" class="w-full rounded-lg border border-slate-200 dark:border-slate-700" src="">
+      <p id="qrNote" class="text-xs text-slate-500 mt-2">长按保存二维码</p>
+    </div>
+    <form method="dialog" class="p-3 border-t border-slate-200 dark:border-slate-700">
+      <button class="w-full py-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700">关闭</button>
+    </form>
+  </dialog>
+
+  <!-- App Config & Scripts -->
+  <script>
+    window.__APP_CONFIG__ = {
+      // 替换为你的 Supabase 项目信息
+      supabaseUrl: "https://zmuaawzjscrexezgencu.supabase.co",
+      supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InptdWFhd3pqc2NyZXhlemdlbmN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAyNjczODQsImV4cCI6MjA3NTg0MzM4NH0.mNb3-SLgGIalH1szlpETInmpnoPHlMlg1Cbowe-wB0o",
+      // 页面加载哪个创始人：支持 ?handle=xxx 或 ?id=uuid
+      defaultHandle: "lowcode",
+      // 用于站外分享的默认文案
+      share: {
+        title: "低代码技术分享",
+        text: "专注低代码技术分享，助力开发者快速构建应用。欢迎交流学习！",
+        url: typeof location !== 'undefined' ? location.href : ""
+      }
+    };
+  </script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
+
