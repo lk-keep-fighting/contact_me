@@ -116,7 +116,7 @@
         `;
         
         // 打开预览页面
-        const url = `/index.html?handle=${handle}&preview=true`;
+        const url = `/profile.html?handle=${handle}&preview=true`;
         log(`🔗 打开预览页面: ${url}`);
         window.open(url, '_blank');
         
@@ -133,7 +133,7 @@
         return;
       }
 
-      const url = `/index.html?handle=${handle}`;
+      const url = `/profile.html?handle=${handle}`;
       log(`🔗 直接访问: ${url}`);
       window.open(url, '_blank');
     }

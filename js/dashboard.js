@@ -397,7 +397,7 @@ function previewPage() {
   
   // 先保存当前数据
   saveProfile().then(() => {
-    const url = `/index.html?handle=${handle}&preview=true`;
+    const url = `/profile.html?handle=${handle}&preview=true`;
     window.open(url, '_blank');
   });
 }
@@ -442,7 +442,7 @@ function refreshPreview() {
   // 先保存当前数据
   saveProfile().then(() => {
     const iframe = $('#previewFrame');
-    iframe.src = `/index.html?handle=${handle}&preview=true`;
+    iframe.src = `/profile.html?handle=${handle}&preview=true`;
   });
 }
 

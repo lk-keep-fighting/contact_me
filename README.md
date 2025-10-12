@@ -1,59 +1,258 @@
-# 联系我 H5 MVP
+# 联系我 SaaS 平台
 
-一个帮助创业者“一键自我介绍+产品引流”的纯静态 H5 页面，使用 Tailwind CDN 与 Supabase JS（可选）快速上线。
+一个为创业者打造的个人介绍页面SaaS平台，支持一键创建、分享和引流。
 
-## 功能
-- 个人简介、联系方式（社交链接或二维码）、产品介绍（图文）
-- 一键分享（Web Share API + 常见平台回退）
-- 轻量 UI，移动端优先，分享页优化（CTA、社媒预览）
-- 后端数据存储采用 Supabase（可选；无配置时自动使用本地示例数据）
+## 🚀 核心功能
 
-## 目录结构
+### 1. 用户系统
+- ✅ 用户注册/登录（邮箱验证）
+- ✅ 演示账户体验
+- ✅ 用户资料管理
+
+### 2. 页面创建
+- ✅ 拖拽式页面编辑器
+- ✅ 实时预览功能
+- ✅ 主题色彩自定义
+- ✅ 响应式设计
+
+### 3. 内容管理
+- ✅ 个人信息编辑
+- ✅ 产品/服务展示
+- ✅ 社交媒体链接
+- ✅ 二维码管理
+
+### 4. 分享与引流
+- ✅ 一键分享到各大平台
+- ✅ 二维码弹窗
+- ✅ 短链接服务
+- ✅ 分享数据统计
+
+### 5. 数据分析
+- ✅ 页面访问统计
+- ✅ 分享效果分析
+- ✅ 实时数据展示
+
+## 📁 项目结构
+
 ```
-index.html
-js/app.js
-README.md
-supabase.sql
+contact-me/
+├── index.html              # 首页（平台介绍）
+├── profile.html            # 用户页面（个人介绍）
+├── dashboard.html          # 管理后台
+├── login.html             # 登录注册页面
+├── demo.html              # 演示页面
+├── debug.html             # 调试工具
+├── test-preview.html      # 预览测试
+├── js/
+│   ├── config.js          # 统一配置文件
+│   ├── app.js             # 用户页面逻辑
+│   ├── dashboard.js       # 管理后台逻辑
+│   └── auth.js            # 认证逻辑
+├── saas-schema-fixed.sql  # SaaS数据库架构
+├── SETUP-GUIDE.md         # 设置指南
+├── CONFIG-README.md       # 配置说明
+└── README.md              # 项目说明
 ```
 
-## 快速开始
-1. 打开 `index.html` 即可本地预览（无需构建）。
-2. 如需接入 Supabase：
-   - 在 `index.html` 中设置 `window.__APP_CONFIG__` 的 `supabaseUrl` 与 `supabaseKey`。
-   - 部署 `supabase.sql` 到你的 Supabase 项目（SQL Editor 执行）。
-   - 用链接访问：`https://your-domain?handle=founder` 或 `?id=<uuid>`。
+## 🛠 技术栈
 
-## 部署
-- 静态托管任选：Vercel、Netlify、Cloudflare Pages、GitHub Pages、阿里云 OSS、七牛、腾讯云 COS。
-- 直接把本仓库上传/连接即可。无需服务器。
+### 前端
+- **HTML5 + CSS3**: 原生开发，无构建步骤
+- **Tailwind CSS**: 通过CDN引入，快速样式开发
+- **Vanilla JavaScript**: 原生JS，轻量级
+- **Boxicons**: 图标库
 
-## SEO/社媒预览
-在 `index.html` 中根据你的品牌更新：
-- `<title>` 与 `<meta name="description">`
-- 可按需增加 Open Graph 标签：
-```html
-<meta property="og:title" content="联系我 | 一键自我介绍">
-<meta property="og:description" content="一键查看我的背景与产品亮点，欢迎合作交流。">
-<meta property="og:image" content="https://your.cdn/og.jpg">
-<meta property="og:type" content="website">
+### 后端
+- **Supabase**: 
+  - PostgreSQL 数据库
+  - 用户认证系统
+  - 实时数据同步
+  - Row Level Security (RLS)
+
+### 部署
+- **静态托管**: Vercel、Netlify、阿里云OSS等
+- **CDN加速**: 全球访问优化
+
+## 🚀 快速开始
+
+### 1. 数据库设置
+```sql
+-- 在Supabase SQL Editor中执行
+-- 运行 saas-schema-fixed.sql 文件
 ```
 
-## 配置项（window.__APP_CONFIG__）
-```js
-{
-  supabaseUrl: "https://xxxx.supabase.co",
-  supabaseKey: "public-anon-key",
-  defaultHandle: "founder",
-  share: { title: "了解我和我的产品", text: "一键查看我的背景与产品亮点，欢迎合作交流。", url: location.href }
-}
+### 2. 配置Supabase
+```javascript
+// 在 js/config.js 中配置
+window.__APP_CONFIG__ = {
+  supabaseUrl: "你的项目URL",
+  supabaseKey: "你的anon key"
+};
 ```
 
-## 开发提示
-- UI 使用 Tailwind CDN，可在 `<script src="https://cdn.tailwindcss.com"></script>` 下方自定义主题色。
-- 图标使用 Boxicons（CDN 已引入），在社交按钮中通过 `icon_class` 控制。
-- 无 Supabase 配置时将渲染内置示例数据，便于快速演示。
+### 3. 本地开发
+```bash
+# 启动本地服务器
+python3 -m http.server 8000
 
-## License
-MIT
-# contact_me
-# contact_me
+# 访问应用
+http://localhost:8000
+```
+
+### 4. 部署上线
+- 将项目文件上传到静态托管平台
+- 配置自定义域名
+- 设置SSL证书
+
+## 📊 数据库架构
+
+### 核心表结构
+- **user_profiles**: 用户信息
+- **profiles**: 用户资料页面
+- **products**: 产品/服务
+- **socials**: 社交媒体链接
+- **page_views**: 访问统计
+- **shares**: 分享统计
+- **templates**: 页面模板
+- **subscriptions**: 订阅管理
+
+### 安全策略
+- Row Level Security (RLS) 启用
+- 用户只能访问自己的数据
+- 公开页面允许匿名访问
+- 统计数据支持匿名插入
+
+## 🎯 商业模式
+
+### 免费版
+- 1个页面
+- 基础模板
+- 基础统计
+- 标准域名
+
+### 专业版 ($9.9/月)
+- 5个页面
+- 所有模板
+- 详细统计
+- 自定义域名
+- 高级主题
+
+### 企业版 ($29.9/月)
+- 无限页面
+- 团队协作
+- API访问
+- 白标定制
+- 优先支持
+
+## 📱 使用流程
+
+### 用户注册
+1. 访问 `/login.html`
+2. 点击"立即注册"
+3. 填写基本信息
+4. 验证邮箱
+
+### 创建页面
+1. 登录后进入 `/dashboard.html`
+2. 填写个人信息
+3. 添加联系方式
+4. 添加产品/服务
+5. 预览页面效果
+
+### 发布分享
+1. 点击"发布"按钮
+2. 获取页面链接
+3. 一键分享到社交媒体
+4. 查看访问数据
+
+## 🎨 自定义主题
+
+### 主题色彩
+- 支持自定义主色调
+- 自动生成配色方案
+- 深色模式支持
+
+### 页面布局
+- 响应式设计
+- 移动端优化
+- 加载速度优化
+
+## 📈 数据分析
+
+### 访问统计
+- 总访问量
+- 日访问量
+- 访问来源
+- 地理位置
+
+### 分享统计
+- 分享次数
+- 分享平台
+- 转化效果
+- 用户行为
+
+## 🔒 安全特性
+
+### 数据安全
+- 端到端加密
+- 定期备份
+- 访问控制
+- 数据隔离
+
+### 隐私保护
+- GDPR合规
+- 数据最小化
+- 用户控制
+- 透明政策
+
+## 🌟 特色功能
+
+### 一键分享
+- 支持Web Share API
+- 社交媒体回退
+- 二维码生成
+- 短链接服务
+
+### 实时预览
+- 即时更新
+- 多设备预览
+- 分享测试
+- 效果验证
+
+### 数据分析
+- 实时统计
+- 可视化图表
+- 导出报告
+- 趋势分析
+
+## 📞 技术支持
+
+### 文档
+- 用户手册
+- API文档
+- 开发指南
+- 常见问题
+
+### 社区
+- 用户论坛
+- 技术交流
+- 功能建议
+- 问题反馈
+
+## 🚀 未来规划
+
+### 短期目标
+- 完善核心功能
+- 优化用户体验
+- 增加模板库
+- 提升性能
+
+### 长期愿景
+- 成为创业者首选平台
+- 构建生态系统
+- 国际化扩展
+- AI智能推荐
+
+---
+
+**联系我 SaaS** - 让每个创业者都能轻松展示自己！
