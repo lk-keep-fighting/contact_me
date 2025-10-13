@@ -271,6 +271,9 @@ function setupEventListeners() {
   $('#previewBtn').addEventListener('click', previewPage);
   $('#publishBtn').addEventListener('click', publishPage);
   $('#refreshPreview').addEventListener('click', refreshPreview);
+  
+  // 退出登录
+  $('#logoutBtn').addEventListener('click', logout);
 }
 
 // 保存资料
@@ -658,6 +661,41 @@ async function deleteProduct(id) {
   }
   
   loadProducts();
+}
+
+// 退出登录
+async function logout() {
+  // 使用通用退出函数
+  const success = await window.AuthUtils?.performLogout?.() || 
+                  await performFallbackLogout();
+  
+  if (success) {
+    // 清除本地状态
+    currentUser = null;
+    currentProfile = null;
+  }
+}
+
+// 备用退出方法（如果通用工具未加载）
+async function performFallbackLogout() {
+  if (!confirm('确认要退出登录吗？')) {
+    return false;
+  }
+  
+  try {
+    if (supabase) {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        alert('退出失败，请重试');
+        return false;
+      }
+    }
+    window.location.href = '/login.html';
+    return true;
+  } catch (error) {
+    alert('退出异常，请重试');
+    return false;
+  }
 }
 
 // 页面加载完成后初始化

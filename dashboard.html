@@ -67,6 +67,9 @@
           <div class="flex items-center space-x-2">
             <img id="userAvatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" alt="avatar" class="w-8 h-8 rounded-full">
             <span id="userName" class="text-sm font-medium">用户名</span>
+            <button id="logoutBtn" class="ml-3 px-3 py-1 text-sm text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="退出登录">
+              <i class='bx bx-log-out align-[-2px]'></i>
+            </button>
           </div>
         </div>
       </div>
@@ -279,6 +282,7 @@
   <!-- App Config & Scripts -->
   <script src="/js/config.js"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script src="/js/auth-utils.js"></script>
   <script src="/js/upload.js"></script>
   <script src="/js/dashboard.js"></script>
 </body>
