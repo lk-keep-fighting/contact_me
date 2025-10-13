@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supabase 配置检查</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+    .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+    .error { background: #ffebee; border-color: #f44336; color: #c62828; }
+    .success { background: #e8f5e8; border-color: #4caf50; color: #2e7d32; }
+    .warning { background: #fff3e0; border-color: #ff9800; color: #ef6c00; }
+    .info { background: #e3f2fd; border-color: #2196f3; color: #1976d2; }
+    .code { background: #f4f4f4; padding: 10px; border-radius: 5px; font-family: monospace; margin: 10px 0; }
+    h1 { color: #333; text-align: center; }
+    h2 { color: #555; border-bottom: 2px solid #0ea5e9; padding-bottom: 10px; }
+    button { padding: 10px 20px; background: #0ea5e9; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+    button:hover { background: #0284c7; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔧 Supabase 配置检查工具</h1>
+    
+    <div class="section info">
+      <h2>当前环境信息</h2>
+      <div class="code" id="currentInfo">正在检测...</div>
+    </div>
+
+    <div class="section warning">
+      <h2>⚠️ 问题诊断：验证邮件跳转错误</h2>
+      <p><strong>问题：</strong>注册验证邮件链接跳转到 localhost:3000</p>
+      <p><strong>应该跳转到：</strong>https://contact-me.ydtpt.com/</p>
+      <p><strong>原因：</strong>Supabase项目的Site URL配置错误</p>
+    </div>
+
+    <div class="section error">
+      <h2>🚨 需要立即修复的配置</h2>
+      
+      <h3>1. 在Supabase Dashboard中修复Site URL</h3>
+      <ol>
+        <li>登录 <a href="https://app.supabase.com" target="_blank">Supabase Dashboard</a></li>
+        <li>选择你的项目</li>
+        <li>导航到 <strong>Settings → Authentication</strong></li>
+        <li>在 <strong>"Site URL"</strong> 字段中，将：</li>
+        <div class="code">❌ 当前值: http://localhost:3000</div>
+        <div class="code">✅ 改为: https://contact-me.ydtpt.com</div>
+      </ol>
+
+      <h3>2. 配置允许的重定向URL</h3>
+      <p>在同一页面的 <strong>"Additional Redirect URLs"</strong> 部分添加：</p>
+      <div class="code">
+        https://contact-me.ydtpt.com/**<br>
+        https://contact-me.ydtpt.com/dashboard.html<br>
+        https://contact-me.ydtpt.com/login.html<br>
+        https://contact-me.ydtpt.com/redirect.html
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>🧪 配置验证测试</h2>
+      <button onclick="testCurrentDomain()">检测当前域名</button>
+      <button onclick="testSupabaseConfig()">检测Supabase配置</button>
+      <button onclick="testAuthFlow()">测试认证流程</button>
+      
+      <div id="testResults"></div>
+    </div>
+
+    <div class="section success">
+      <h2>✅ 修复完成后的验证步骤</h2>
+      <ol>
+        <li>在Supabase中保存新的配置</li>
+        <li>等待1-2分钟让配置生效</li>
+        <li>注册一个新的测试账号</li>
+        <li>检查验证邮件中的链接是否指向正确的域名</li>
+        <li>点击验证链接，确认能正确跳转到你的网站</li>
+      </ol>
+    </div>
+  </div>
+
+  <script src="/js/config.js"></script>
+  <script>
+    const cfg = window.__APP_CONFIG__ || {};
+    
+    function updateCurrentInfo() {
+      const info = `
+当前页面URL: ${window.location.href}
+当前域名: ${window.location.hostname}
+协议: ${window.location.protocol}
+端口: ${window.location.port || '(默认)'}
+
+Supabase配置:
+- URL: ${cfg.supabaseUrl || '未配置'}
+- Key: ${cfg.supabaseKey ? cfg.supabaseKey.substring(0, 20) + '...' : '未配置'}
+
+期望的Site URL: https://contact-me.ydtpt.com
+      `;
+      document.getElementById('currentInfo').textContent = info;
+    }
+    
+    function log(message, type = 'info') {
+      const results = document.getElementById('testResults');
+      const div = document.createElement('div');
+      div.className = `section ${type}`;
+      div.innerHTML = `<p>${message}</p>`;
+      results.appendChild(div);
+    }
+    
+    function testCurrentDomain() {
+      document.getElementById('testResults').innerHTML = '';
+      
+      const currentDomain = window.location.hostname;
+      const expectedDomain = 'contact-me.ydtpt.com';
+      
+      if (currentDomain === expectedDomain) {
+        log('✅ 当前正在正确的生产域名上访问', 'success');
+      } else if (currentDomain === 'localhost' || currentDomain.includes('127.0.0.1')) {
+        log('⚠️ 当前在本地开发环境，这是正常的', 'warning');
+      } else {
+        log(`❓ 当前域名: ${currentDomain}，期望域名: ${expectedDomain}`, 'info');
+      }
+    }
+    
+    async function testSupabaseConfig() {
+      if (!cfg.supabaseUrl || !cfg.supabaseKey) {
+        log('❌ Supabase配置缺失，无法测试', 'error');
+        return;
+      }
+      
+      try {
+        const client = window.supabase?.createClient(cfg.supabaseUrl, cfg.supabaseKey);
+        if (!client) {
+          log('❌ 无法创建Supabase客户端', 'error');
+          return;
+        }
+        
+        // 尝试获取当前会话
+        const { data: { session }, error } = await client.auth.getSession();
+        
+        if (error) {
+          log(`⚠️ 认证检查失败: ${error.message}`, 'warning');
+        } else {
+          log('✅ Supabase连接正常', 'success');
+          if (session) {
+            log('✅ 当前有活跃的用户会话', 'success');
+          } else {
+            log('ℹ️ 当前没有用户会话（未登录）', 'info');
+          }
+        }
+      } catch (err) {
+        log(`❌ Supabase测试失败: ${err.message}`, 'error');
+      }
+    }
+    
+    async function testAuthFlow() {
+      if (!cfg.supabaseUrl || !cfg.supabaseKey) {
+        log('❌ 需要Supabase配置才能测试认证流程', 'error');
+        return;
+      }
+      
+      log('ℹ️ 认证流程测试说明:', 'info');
+      log('1. 确保已在Supabase中配置了正确的Site URL', 'info');
+      log('2. 注册一个测试邮箱账号', 'info');
+      log('3. 检查验证邮件中的链接是否指向 https://contact-me.ydtpt.com', 'info');
+      
+      // 显示当前认证设置应该的样子
+      const correctConfig = `
+正确的Supabase认证设置:
+
+Site URL: https://contact-me.ydtpt.com
+
+Additional Redirect URLs:
+- https://contact-me.ydtpt.com/**
+- https://contact-me.ydtpt.com/dashboard.html
+- https://contact-me.ydtpt.com/login.html
+- https://contact-me.ydtpt.com/redirect.html
+      `;
+      
+      log(correctConfig, 'info');
+    }
+    
+    // 页面加载时自动更新信息
+    window.addEventListener('load', () => {
+      updateCurrentInfo();
+      
+      // 如果没有加载Supabase库，显示警告
+      if (!window.supabase) {
+        setTimeout(() => {
+          const script = document.createElement('script');
+          script.src = 'https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js';
+          document.head.appendChild(script);
+        }, 1000);
+      }
+    });
+  </script>
+</body>
+</html>
