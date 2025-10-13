@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>编辑功能测试</title>
+</head>
+<body>
+  <h1>编辑功能测试</h1>
+  
+  <button onclick="testEditProduct()">测试编辑产品</button>
+  <button onclick="testEditSocial()">测试编辑社交</button>
+  
+  <div id="log"></div>
+
+  <script>
+    function log(msg) {
+      document.getElementById('log').innerHTML += '<p>' + msg + '</p>';
+    }
+    
+    function testEditProduct() {
+      log('测试 editProduct 函数...');
+      
+      // 检查DOM元素是否存在
+      const elements = [
+        '#productName',
+        '#productDescription', 
+        '#productImage',
+        '#productUrl',
+        '#productShareText',
+        '#productModalTitle',
+        '#saveProduct',
+        '#productModal'
+      ];
+      
+      elements.forEach(selector => {
+        const el = document.querySelector(selector);
+        log(`${selector}: ${el ? '存在' : '不存在'}`);
+      });
+    }
+    
+    function testEditSocial() {
+      log('测试 editSocial 函数...');
+      
+      // 检查DOM元素是否存在
+      const elements = [
+        '#socialPlatform',
+        '#socialLabel',
+        '#socialUrl', 
+        '#socialQr',
+        '#socialQrNote',
+        '#socialModalTitle',
+        '#saveSocial',
+        '#socialModal'
+      ];
+      
+      elements.forEach(selector => {
+        const el = document.querySelector(selector);
+        log(`${selector}: ${el ? '存在' : '不存在'}`);
+      });
+    }
+  </script>
+</body>
+</html>

@@ -70,17 +70,11 @@ function renderProducts(products) {
       const sbtn = document.createElement('button');
       sbtn.className = 'px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm hover:border-sky-400';
       sbtn.textContent = '分享';
-      sbtn.addEventListener('click', () => {
-        // 记录产品分享统计
-        if (window.currentProfileId) {
-          recordShare(window.currentProfileId, 'product');
-        }
-        share({
-          title: p.name,
-          text: p.shareText || p.description || '',
-          url: p.url || location.href
-        });
-      });
+      sbtn.addEventListener('click', () => share({
+        title: p.name,
+        text: p.shareText || p.description || '',
+        url: p.url || location.href
+      }));
       row.appendChild(sbtn);
     }
     box.appendChild(h3); box.appendChild(desc); box.appendChild(row);
@@ -285,33 +279,7 @@ async function recordPageView(profileId) {
   }
 }
 
-// 记录分享行为
-async function recordShare(profileId, platform = 'unknown') {
-  if (!profileId) return;
-  
-  const client = createClient();
-  if (!client) return;
-  
-  try {
-    await client.from('shares').insert({
-      profile_id: profileId,
-      platform,
-      ip_address: null, // 保护隐私
-      user_agent: navigator.userAgent
-    });
-  } catch (error) {
-    console.error('Failed to record share:', error);
-  }
-}
-
-$('#shareBtn').addEventListener('click', () => {
-  // 在分享时记录统计
-  const { handle } = parseQuery();
-  if (handle || window.currentProfileId) {
-    recordShare(window.currentProfileId || handle, 'native');
-  }
-  share();
-});
+$('#shareBtn').addEventListener('click', () => share());
 
 document.addEventListener('DOMContentLoaded', loadData);
 

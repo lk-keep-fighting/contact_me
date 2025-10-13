@@ -203,22 +203,36 @@ function createProductItem(product) {
   return div;
 }
 
-// 加载统计数据
+// 加载统计数据（只统计页面访问量）
 async function loadAnalytics() {
   if (!currentProfile) return;
   
-  const { count: viewCount } = await supabase
-    .from('page_views')
-    .select('*', { count: 'exact', head: true })
-    .eq('profile_id', currentProfile.id);
-  
-  const { count: shareCount } = await supabase
-    .from('shares')
-    .select('*', { count: 'exact', head: true })
-    .eq('profile_id', currentProfile.id);
-  
-  $('#viewCount').textContent = viewCount || 0;
-  $('#shareCount').textContent = shareCount || 0;
+  try {
+    const { count: viewCount, error } = await supabase
+      .from('page_views')
+      .select('*', { count: 'exact', head: true })
+      .eq('profile_id', currentProfile.id);
+    
+    if (error) {
+      console.error('加载统计数据失败:', error);
+      $('#viewCount').textContent = '0';
+      return;
+    }
+    
+    $('#viewCount').textContent = viewCount || 0;
+    
+    // 如果存在shareCount元素，隐藏或移除它
+    const shareCountEl = $('#shareCount');
+    if (shareCountEl) {
+      const shareSection = shareCountEl.closest('.stat-item, .metric-card, .analytics-item');
+      if (shareSection) {
+        shareSection.style.display = 'none';
+      }
+    }
+  } catch (error) {
+    console.error('加载统计数据错误:', error);
+    $('#viewCount').textContent = '0';
+  }
 }
 
 // 设置事件监听器
@@ -230,12 +244,22 @@ function setupEventListeners() {
   
   // 添加社交链接
   $('#addSocialBtn').addEventListener('click', () => {
-    $('#socialModal').showModal();
+    const modal = $('#socialModal');
+    if (typeof modal.showModal === 'function') {
+      modal.showModal();
+    } else {
+      modal.style.display = 'block';
+    }
   });
   
   // 添加产品
   $('#addProductBtn').addEventListener('click', () => {
-    $('#productModal').showModal();
+    const modal = $('#productModal');
+    if (typeof modal.showModal === 'function') {
+      modal.showModal();
+    } else {
+      modal.style.display = 'block';
+    }
   });
   
   // 模态框事件
@@ -304,7 +328,7 @@ async function saveProfile() {
   return currentProfile;
 }
 
-// 保存社交链接
+// 保存社交链接（新增或更新）
 async function saveSocial() {
   if (!currentProfile) return;
   
@@ -319,21 +343,36 @@ async function saveSocial() {
     is_published: true
   };
   
-  const { error } = await supabase
-    .from('socials')
-    .insert(socialData);
+  let error;
+  if (window.editingSocialId) {
+    // 更新
+    ({ error } = await supabase
+      .from('socials')
+      .update(socialData)
+      .eq('id', window.editingSocialId));
+  } else {
+    // 新增
+    ({ error } = await supabase
+      .from('socials')
+      .insert(socialData));
+  }
   
   if (error) {
     console.error('保存社交链接失败:', error);
     return;
   }
   
+  // 重置编辑状态
+  window.editingSocialId = null;
+  $('#socialModalTitle').textContent = '新增联系方式';
+  $('#saveSocial').textContent = '保存';
+  
   $('#socialModal').close();
   clearSocialForm();
   loadSocials();
 }
 
-// 保存产品
+// 保存产品（新增或更新）
 async function saveProduct() {
   if (!currentProfile) return;
   
@@ -347,15 +386,30 @@ async function saveProduct() {
     is_published: true
   };
   
-  const { error } = await supabase
-    .from('products')
-    .insert(productData);
+  let error;
+  if (window.editingProductId) {
+    // 更新
+    ({ error } = await supabase
+      .from('products')
+      .update(productData)
+      .eq('id', window.editingProductId));
+  } else {
+    // 新增
+    ({ error } = await supabase
+      .from('products')
+      .insert(productData));
+  }
   
   if (error) {
     console.error('保存产品失败:', error);
     return;
   }
   
+  // 重置编辑状态
+  window.editingProductId = null;
+  $('#productModalTitle').textContent = '新增产品';
+  $('#saveProduct').textContent = '保存';
+
   $('#productModal').close();
   clearProductForm();
   loadProducts();
@@ -384,6 +438,15 @@ function clearSocialForm() {
   $('#socialUrl').value = '';
   $('#socialQr').value = '';
   $('#socialQrNote').value = '';
+  
+  // 重置编辑状态
+  window.editingSocialId = null;
+  $('#socialModalTitle').textContent = '新增联系方式';
+  $('#saveSocial').textContent = '保存';
+  
+  // 隐藏预览
+  const container = $('#qrPreviewContainer');
+  if (container) container.classList.add('hidden');
 }
 
 function clearProductForm() {
@@ -392,6 +455,15 @@ function clearProductForm() {
   $('#productImage').value = '';
   $('#productUrl').value = '';
   $('#productShareText').value = '';
+  
+  // 重置编辑状态  
+  window.editingProductId = null;
+  $('#productModalTitle').textContent = '新增产品';
+  $('#saveProduct').textContent = '保存';
+  
+  // 隐藏预览
+  const container = $('#productImagePreviewContainer');
+  if (container) container.classList.add('hidden');
 }
 
 // 预览页面
@@ -454,9 +526,54 @@ function refreshPreview() {
 }
 
 // 编辑社交链接
-function editSocial(id) {
-  // TODO: 实现编辑功能
-  console.log('编辑社交链接:', id);
+async function editSocial(id) {
+  console.log('开始编辑社交链接:', id);
+  if (!currentProfile) {
+    console.error('没有当前用户资料');
+    return;
+  }
+  
+  // 获取社交链接数据
+  const { data: social, error } = await supabase
+    .from('socials')
+    .select('*')
+    .eq('id', id)
+    .single();
+  
+  if (error) {
+    console.error('获取社交链接数据失败:', error);
+    return;
+  }
+  
+  // 填充编辑表单
+  $('#socialPlatform').value = social.platform || 'WeChat';
+  $('#socialLabel').value = social.label || '';
+  $('#socialUrl').value = social.url || '';
+  $('#socialQr').value = social.qr_image_url || '';
+  $('#socialQrNote').value = social.qr_note || '';
+  
+  // 设置编辑模式
+  window.editingSocialId = id;
+  $('#socialModalTitle').textContent = '编辑联系方式';
+  $('#saveSocial').textContent = '更新';
+  
+  // 如果有二维码，显示预览
+  if (social.qr_image_url) {
+    const preview = $('#qrPreview');
+    const container = $('#qrPreviewContainer');
+    if (preview && container) {
+      preview.src = social.qr_image_url;
+      container.classList.remove('hidden');
+    }
+  }
+  
+  // 打开模态框
+  const modal = $('#socialModal');
+  if (typeof modal.showModal === 'function') {
+    modal.showModal();
+  } else {
+    modal.style.display = 'block';
+  }
 }
 
 // 删除社交链接
@@ -477,9 +594,54 @@ async function deleteSocial(id) {
 }
 
 // 编辑产品
-function editProduct(id) {
-  // TODO: 实现编辑功能
-  console.log('编辑产品:', id);
+async function editProduct(id) {
+  console.log('开始编辑产品:', id);
+  if (!currentProfile) {
+    console.error('没有当前用户资料');
+    return;
+  }
+  
+  // 获取产品数据
+  const { data: product, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('id', id)
+    .single();
+  
+  if (error) {
+    console.error('获取产品数据失败:', error);
+    return;
+  }
+  
+  // 填充编辑表单
+  $('#productName').value = product.name || '';
+  $('#productDescription').value = product.description || '';
+  $('#productImage').value = product.image_url || '';
+  $('#productUrl').value = product.url || '';
+  $('#productShareText').value = product.share_text || '';
+  
+  // 设置编辑模式
+  window.editingProductId = id;
+  $('#productModalTitle').textContent = '编辑产品';
+  $('#saveProduct').textContent = '更新产品';
+  
+  // 如果有产品图片，显示预览
+  if (product.image_url) {
+    const preview = $('#productImagePreview');
+    const container = $('#productImagePreviewContainer');
+    if (preview && container) {
+      preview.src = product.image_url;
+      container.classList.remove('hidden');
+    }
+  }
+  
+  // 打开模态框
+  const modal = $('#productModal');
+  if (typeof modal.showModal === 'function') {
+    modal.showModal();
+  } else {
+    modal.style.display = 'block';
+  }
 }
 
 // 删除产品
