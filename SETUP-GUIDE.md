@@ -1,4 +1,4 @@
-# 联系我 SaaS 设置指南
+# 联系我 设置指南
 
 ## 🚨 当前问题
 Supabase项目连接失败，需要重新创建项目。
@@ -48,7 +48,7 @@ window.__APP_CONFIG__ = {
   
   // 应用配置
   defaultHandle: "lowcode",
-  appName: "联系我 SaaS",
+  appName: "联系我",
   appDescription: "为创业者打造的个人介绍平台",
   
   // 分享配置

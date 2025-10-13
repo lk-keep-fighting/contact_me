@@ -128,3 +128,58 @@ with f as (
 insert into public.socials (profile_id, platform, label, icon_class, url, sort_order, published)
 select id, 'Email', '邮箱', 'bx-envelope', 'mailto:442969153@qq.com', 3, true from f
 on conflict do nothing;
+
+-- 统计表
+create table if not exists public.page_views (
+  id uuid primary key default gen_random_uuid(),
+  profile_id uuid not null references public.profiles(id) on delete cascade,
+  ip_address text,
+  user_agent text,
+  referrer text,
+  created_at timestamp with time zone default now()
+);
+
+create table if not exists public.shares (
+  id uuid primary key default gen_random_uuid(),
+  profile_id uuid not null references public.profiles(id) on delete cascade,
+  platform text, -- 'native', 'twitter', 'linkedin', etc.
+  ip_address text,
+  user_agent text,
+  created_at timestamp with time zone default now()
+);
+
+-- 为统计表设置RLS
+alter table public.page_views enable row level security;
+alter table public.shares enable row level security;
+
+-- 允许匿名插入统计数据（用于收集访问统计）
+drop policy if exists "Allow insert page_views" on public.page_views;
+drop policy if exists "Allow insert shares" on public.shares;
+
+create policy "Allow insert page_views" on public.page_views
+  for insert with check (true);
+
+create policy "Allow insert shares" on public.shares
+  for insert with check (true);
+
+-- 只有profile的拥有者才能查看统计数据
+drop policy if exists "Profile owner can view page_views" on public.page_views;
+drop policy if exists "Profile owner can view shares" on public.shares;
+
+create policy "Profile owner can view page_views" on public.page_views
+  for select using (
+    exists (
+      select 1 from public.profiles p 
+      where p.id = page_views.profile_id 
+      and p.user_id = auth.uid()
+    )
+  );
+
+create policy "Profile owner can view shares" on public.shares
+  for select using (
+    exists (
+      select 1 from public.profiles p 
+      where p.id = shares.profile_id 
+      and p.user_id = auth.uid()
+    )
+  );

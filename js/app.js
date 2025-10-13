@@ -70,11 +70,17 @@ function renderProducts(products) {
       const sbtn = document.createElement('button');
       sbtn.className = 'px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm hover:border-sky-400';
       sbtn.textContent = '分享';
-      sbtn.addEventListener('click', () => share({
-        title: p.name,
-        text: p.shareText || p.description || '',
-        url: p.url || location.href
-      }));
+      sbtn.addEventListener('click', () => {
+        // 记录产品分享统计
+        if (window.currentProfileId) {
+          recordShare(window.currentProfileId, 'product');
+        }
+        share({
+          title: p.name,
+          text: p.shareText || p.description || '',
+          url: p.url || location.href
+        });
+      });
       row.appendChild(sbtn);
     }
     box.appendChild(h3); box.appendChild(desc); box.appendChild(row);
@@ -113,6 +119,36 @@ async function share(payload) {
   }
 }
 
+function applyThemeColor(color) {
+  // 使用CSS变量应用主题色
+  document.documentElement.style.setProperty('--theme-color', color);
+  
+  // 直接更新关键元素的样式
+  const elements = {
+    // 主要按钮
+    '#cta': `background-color: ${color} !important;`,
+    // 纸牌 hover效果
+    '.glass:hover': `border-color: ${color}40 !important;`,
+    // 按钮
+    'button.bg-sky-600': `background-color: ${color} !important;`,
+    'a.bg-sky-600': `background-color: ${color} !important;`,
+    // 标签
+    '.bg-sky-50': `background-color: ${color}10 !important; color: ${color} !important; border-color: ${color}20 !important;`
+  };
+  
+  // 创建或更新样式表
+  let styleEl = document.getElementById('dynamic-theme');
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = 'dynamic-theme';
+    document.head.appendChild(styleEl);
+  }
+  
+  styleEl.textContent = Object.entries(elements)
+    .map(([selector, styles]) => `${selector} { ${styles} }`)
+    .join('\n');
+}
+
 function hydrateFallbackStatic() {
   // For local demo without Supabase
   const demo = {
@@ -122,6 +158,7 @@ function hydrateFallbackStatic() {
     badges: ['低代码', '技术分享', '开发者'],
     bio: '专注低代码技术分享，帮助开发者快速构建应用，提升开发效率。',
     cta: { url: '#', label: '技术交流' },
+    themeColor: '#0ea5e9',
     socials: [
       { name: 'WeChat', label: '个人微信', icon: 'bx-qr', qr: { url: 'https://xzzmlk.oss-cn-shanghai.aliyuncs.com/wx.jpg', note: '醒着做梦' } },
       { name: 'WeChatOfficial', label: '微信公众号', icon: 'bx-qr', qr: { url: 'https://xzzmlk.oss-cn-shanghai.aliyuncs.com/lowcode-share.JPG', note: '低代码分享' } },
@@ -143,6 +180,11 @@ function applyData(data) {
   setText('#bio', data.bio);
   setText('#footerName', data.footerName || data.name || '');
   $('#year').textContent = new Date().getFullYear();
+  
+  // 应用主题色
+  if (data.themeColor) {
+    applyThemeColor(data.themeColor);
+  }
 
   const badges = $('#badges');
   badges.innerHTML = '';
@@ -198,6 +240,7 @@ async function loadData() {
     badges: (data.tags || '').split(',').filter(Boolean),
     bio: data.bio,
     cta: { url: data.cta_url, label: data.cta_label },
+    themeColor: data.theme_color || '#0ea5e9',
     socials: (data.socials || []).map(s => ({
       name: s.platform,
       label: s.label || s.platform,
@@ -215,9 +258,60 @@ async function loadData() {
     footerName: data.brand || data.name
   };
   applyData(mapped);
+  
+  // 保存profile ID供统计使用
+  window.currentProfileId = data.id;
+  
+  // 记录访问统计
+  recordPageView(data.id);
 }
 
-$('#shareBtn').addEventListener('click', () => share());
+// 记录页面访问
+async function recordPageView(profileId) {
+  if (!profileId) return;
+  
+  const client = createClient();
+  if (!client) return;
+  
+  try {
+    await client.from('page_views').insert({
+      profile_id: profileId,
+      ip_address: null, // 保护隐私，不记录IP
+      user_agent: navigator.userAgent,
+      referrer: document.referrer
+    });
+  } catch (error) {
+    console.error('Failed to record page view:', error);
+  }
+}
+
+// 记录分享行为
+async function recordShare(profileId, platform = 'unknown') {
+  if (!profileId) return;
+  
+  const client = createClient();
+  if (!client) return;
+  
+  try {
+    await client.from('shares').insert({
+      profile_id: profileId,
+      platform,
+      ip_address: null, // 保护隐私
+      user_agent: navigator.userAgent
+    });
+  } catch (error) {
+    console.error('Failed to record share:', error);
+  }
+}
+
+$('#shareBtn').addEventListener('click', () => {
+  // 在分享时记录统计
+  const { handle } = parseQuery();
+  if (handle || window.currentProfileId) {
+    recordShare(window.currentProfileId || handle, 'native');
+  }
+  share();
+});
 
 document.addEventListener('DOMContentLoaded', loadData);
 

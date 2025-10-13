@@ -6,7 +6,7 @@ window.__APP_CONFIG__ = {
   
   // 应用配置
   defaultHandle: "lowcode",
-  appName: "联系我 SaaS",
+  appName: "联系我",
   appDescription: "为创业者打造的个人介绍平台",
   
   // 分享配置
