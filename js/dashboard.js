@@ -203,9 +203,15 @@ function createProductItem(product) {
   return div;
 }
 
-// 加载统计数据（只统计页面访问量）
+// 加载访问统计数据
 async function loadAnalytics() {
-  if (!currentProfile) return;
+  if (!currentProfile) {
+    console.warn('没有当前用户资料，无法加载统计');
+    $('#viewCount').textContent = '0';
+    return;
+  }
+  
+  console.log('加载访问统计，profile_id:', currentProfile.id);
   
   try {
     const { count: viewCount, error } = await supabase
@@ -214,23 +220,16 @@ async function loadAnalytics() {
       .eq('profile_id', currentProfile.id);
     
     if (error) {
-      console.error('加载统计数据失败:', error);
+      console.error('加载访问统计失败:', error);
       $('#viewCount').textContent = '0';
       return;
     }
     
+    console.log('访问统计加载成功:', viewCount);
     $('#viewCount').textContent = viewCount || 0;
     
-    // 如果存在shareCount元素，隐藏或移除它
-    const shareCountEl = $('#shareCount');
-    if (shareCountEl) {
-      const shareSection = shareCountEl.closest('.stat-item, .metric-card, .analytics-item');
-      if (shareSection) {
-        shareSection.style.display = 'none';
-      }
-    }
   } catch (error) {
-    console.error('加载统计数据错误:', error);
+    console.error('加载访问统计错误:', error);
     $('#viewCount').textContent = '0';
   }
 }

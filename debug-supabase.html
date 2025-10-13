@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supabase 问题诊断</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .log { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 5px; white-space: pre-wrap; }
+    .error { background: #ffebee; color: #c62828; }
+    .success { background: #e8f5e8; color: #2e7d32; }
+    .warning { background: #fff3e0; color: #f57c00; }
+    button { padding: 10px 20px; margin: 5px; background: #0ea5e9; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #0284c7; }
+    .section { border: 1px solid #ddd; margin: 20px 0; padding: 15px; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <h1>Supabase Schema Cache 问题诊断</h1>
+  
+  <div class="section">
+    <h3>第一步：检查表结构</h3>
+    <button onclick="checkTableSchema()">检查 page_views 表结构</button>
+    <button onclick="checkColumns()">列出所有字段</button>
+  </div>
+  
+  <div class="section">
+    <h3>第二步：测试不同的插入方式</h3>
+    <button onclick="testMinimalInsert()">测试最小字段插入</button>
+    <button onclick="testWithUserAgent()">测试包含user_agent</button>
+    <button onclick="testAllFields()">测试所有字段</button>
+  </div>
+  
+  <div class="section">
+    <h3>第三步：强制刷新 Schema</h3>
+    <button onclick="refreshSchema()">尝试刷新Schema Cache</button>
+    <button onclick="checkPostgREST()">检查PostgREST状态</button>
+  </div>
+  
+  <div id="log"></div>
+
+  <script src="/js/config.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  
+  <script>
+    const cfg = window.__APP_CONFIG__ || {};
+    
+    function log(msg, type = 'info') {
+      const div = document.createElement('div');
+      div.className = `log ${type}`;
+      div.textContent = new Date().toLocaleTimeString() + ':\n' + msg;
+      document.getElementById('log').appendChild(div);
+      console.log(msg);
+    }
+    
+    function createClient() {
+      if (!cfg.supabaseUrl || !cfg.supabaseKey) {
+        log('Supabase配置缺失', 'error');
+        return null;
+      }
+      return window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey);
+    }
+    
+    async function checkTableSchema() {
+      log('检查 page_views 表结构...');
+      const client = createClient();
+      if (!client) return;
+      
+      try {
+        // 检查表是否存在
+        const { data, error } = await client
+          .from('page_views')
+          .select('*')
+          .limit(0); // 不获取数据，只检查表结构
+        
+        if (error) {
+          log('表结构检查失败: ' + JSON.stringify(error, null, 2), 'error');
+        } else {
+          log('page_views 表存在', 'success');
+        }
+      } catch (err) {
+        log('表结构检查异常: ' + err.message, 'error');
+      }
+    }
+    
+    async function checkColumns() {
+      log('通过SQL查询检查字段...');
+      const client = createClient();
+      if (!client) return;
+      
+      try {
+        const { data, error } = await client.rpc('check_columns', {
+          table_name: 'page_views'
+        });
+        
+        if (error) {
+          // 如果RPC失败，尝试直接查询
+          log('RPC失败，尝试其他方法检查字段', 'warning');
+          
+          // 尝试插入一个测试记录来看字段结构
+          const testData = { profile_id: null };
+          const { error: insertError } = await client
+            .from('page_views')
+            .insert(testData);
+          
+          if (insertError) {
+            log('字段检查结果（通过错误消息）:\n' + JSON.stringify(insertError, null, 2), 'warning');
+          }
+        } else {
+          log('字段列表: ' + JSON.stringify(data, null, 2), 'success');
+        }
+      } catch (err) {
+        log('字段检查异常: ' + err.message, 'error');
+      }
+    }
+    
+    async function testMinimalInsert() {
+      log('测试最小字段插入（只有profile_id）...');
+      const client = createClient();
+      if (!client) return;
+      
+      try {
+        // 先获取一个valid profile_id
+        const { data: profiles } = await client
+          .from('profiles')
+          .select('id')
+          .limit(1);
+        
+        if (!profiles?.length) {
+          log('没有找到可用的profile ID', 'error');
+          return;
+        }
+        
+        const { data, error } = await client
+          .from('page_views')
+          .insert({
+            profile_id: profiles[0].id
+          });
+        
+        if (error) {
+          log('最小字段插入失败: ' + JSON.stringify(error, null, 2), 'error');
+        } else {
+          log('最小字段插入成功！', 'success');
+        }
+      } catch (err) {
+        log('最小字段插入异常: ' + err.message, 'error');
+      }
+    }
+    
+    async function testWithUserAgent() {
+      log('测试包含user_agent字段...');
+      const client = createClient();
+      if (!client) return;
+      
+      try {
+        const { data: profiles } = await client
+          .from('profiles')
+          .select('id')
+          .limit(1);
+        
+        if (!profiles?.length) {
+          log('没有找到可用的profile ID', 'error');
+          return;
+        }
+        
+        const { data, error } = await client
+          .from('page_views')
+          .insert({
+            profile_id: profiles[0].id,
+            user_agent: navigator.userAgent
+          });
+        
+        if (error) {
+          log('包含user_agent插入失败: ' + JSON.stringify(error, null, 2), 'error');
+        } else {
+          log('包含user_agent插入成功！', 'success');
+        }
+      } catch (err) {
+        log('包含user_agent插入异常: ' + err.message, 'error');
+      }
+    }
+    
+    async function testAllFields() {
+      log('测试包含所有字段...');
+      const client = createClient();
+      if (!client) return;
+      
+      try {
+        const { data: profiles } = await client
+          .from('profiles')
+          .select('id')
+          .limit(1);
+        
+        if (!profiles?.length) {
+          log('没有找到可用的profile ID', 'error');
+          return;
+        }
+        
+        const { data, error } = await client
+          .from('page_views')
+          .insert({
+            profile_id: profiles[0].id,
+            user_agent: navigator.userAgent,
+            referrer: document.referrer || ''
+          });
+        
+        if (error) {
+          log('完整字段插入失败: ' + JSON.stringify(error, null, 2), 'error');
+        } else {
+          log('完整字段插入成功！', 'success');
+        }
+      } catch (err) {
+        log('完整字段插入异常: ' + err.message, 'error');
+      }
+    }
+    
+    async function refreshSchema() {
+      log('尝试刷新Schema Cache...');
+      log('注意：这个功能可能需要管理员权限', 'warning');
+      
+      // 在Supabase中，通常需要在SQL编辑器中执行：
+      // NOTIFY pgrst, 'reload schema';
+      
+      log('请在 Supabase SQL 编辑器中手动执行以下命令:', 'warning');
+      log('NOTIFY pgrst, \'reload schema\';', 'warning');
+    }
+    
+    async function checkPostgREST() {
+      log('检查PostgREST API状态...');
+      
+      try {
+        const response = await fetch(cfg.supabaseUrl + '/rest/v1/', {
+          headers: {
+            'apikey': cfg.supabaseKey,
+            'Authorization': 'Bearer ' + cfg.supabaseKey
+          }
+        });
+        
+        if (response.ok) {
+          log('PostgREST API 正常响应', 'success');
+          log('Response status: ' + response.status);
+        } else {
+          log('PostgREST API 异常: ' + response.status + ' ' + response.statusText, 'error');
+        }
+      } catch (err) {
+        log('PostgREST 检查失败: ' + err.message, 'error');
+      }
+    }
+  </script>
+</body>
+</html>

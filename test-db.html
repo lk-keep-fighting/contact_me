@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数据库连接测试</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .log { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 5px; }
+    .error { background: #ffebee; color: #c62828; }
+    .success { background: #e8f5e8; color: #2e7d32; }
+    button { padding: 10px 20px; margin: 5px; background: #0ea5e9; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #0284c7; }
+  </style>
+</head>
+<body>
+  <h1>数据库连接和权限测试</h1>
+  
+  <div>
+    <button onclick="testConnection()">测试数据库连接</button>
+    <button onclick="testProfiles()">测试profiles表查询</button>
+    <button onclick="testPageViews()">测试page_views表</button>
+    <button onclick="testInsertPageView()">测试插入访问记录</button>
+  </div>
+  
+  <div id="log"></div>
+
+  <script src="/js/config.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  
+  <script>
+    const cfg = window.__APP_CONFIG__ || {};
+    
+    function log(msg, type = 'info') {
+      const div = document.createElement('div');
+      div.className = `log ${type}`;
+      div.textContent = new Date().toLocaleTimeString() + ': ' + msg;
+      document.getElementById('log').appendChild(div);
+      console.log(msg);
+    }
+    
+    function createClient() {
+      if (!cfg.supabaseUrl || !cfg.supabaseKey) {
+        log('Supabase配置缺失', 'error');
+        return null;
+      }
+      return window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey);
+    }
+    
+    async function testConnection() {
+      log('测试数据库连接...');
+      const client = createClient();
+      if (!client) return;
+      
+      try {
+        const { data, error } = await client.from('profiles').select('count').limit(1);
+        if (error) {
+          log('连接失败: ' + error.message, 'error');
+        } else {
+          log('数据库连接成功', 'success');
+        }
+      } catch (err) {
+        log('连接异常: ' + err.message, 'error');
+      }
+    }
+    
+    async function testProfiles() {
+      log('测试profiles表查询...');
+      const client = createClient();
+      if (!client) return;
+      
+      try {
+        const { data, error } = await client.from('profiles').select('*').limit(5);
+        if (error) {
+          log('profiles查询失败: ' + error.message, 'error');
+        } else {
+          log(`profiles查询成功，找到${data.length}条记录`, 'success');
+          log('样本数据: ' + JSON.stringify(data[0] || {}, null, 2));
+        }
+      } catch (err) {
+        log('profiles查询异常: ' + err.message, 'error');
+      }
+    }
+    
+    async function testPageViews() {
+      log('测试page_views表...');
+      const client = createClient();
+      if (!client) return;
+      
+      try {
+        const { data, error } = await client.from('page_views').select('*').limit(5);
+        if (error) {
+          log('page_views查询失败: ' + error.message, 'error');
+        } else {
+          log(`page_views查询成功，找到${data.length}条记录`, 'success');
+          log('样本数据: ' + JSON.stringify(data[0] || {}, null, 2));
+        }
+      } catch (err) {
+        log('page_views查询异常: ' + err.message, 'error');
+      }
+    }
+    
+    async function testInsertPageView() {
+      log('测试插入访问记录...');
+      const client = createClient();
+      if (!client) return;
+      
+      // 首先获取一个profile ID用于测试
+      try {
+        const { data: profiles, error: profileError } = await client
+          .from('profiles')
+          .select('id')
+          .limit(1);
+        
+        if (profileError || !profiles.length) {
+          log('无法获取profile ID用于测试: ' + (profileError?.message || '没有profiles'), 'error');
+          return;
+        }
+        
+        const profileId = profiles[0].id;
+        log('使用profile ID: ' + profileId);
+        
+        const { data, error } = await client.from('page_views').insert({
+          profile_id: profileId,
+          user_agent: navigator.userAgent || '',
+          referrer: document.referrer || ''
+        });
+        
+        if (error) {
+          log('插入访问记录失败: ' + error.message, 'error');
+        } else {
+          log('插入访问记录成功', 'success');
+        }
+      } catch (err) {
+        log('插入访问记录异常: ' + err.message, 'error');
+      }
+    }
+  </script>
+</body>
+</html>

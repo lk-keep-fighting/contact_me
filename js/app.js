@@ -262,20 +262,35 @@ async function loadData() {
 
 // 记录页面访问
 async function recordPageView(profileId) {
-  if (!profileId) return;
+  if (!profileId) {
+    console.warn('没有profileId，无法记录访问');
+    return;
+  }
+  
+  console.log('尝试记录页面访问，profileId:', profileId);
   
   const client = createClient();
-  if (!client) return;
+  if (!client) {
+    console.warn('没有Supabase客户端，无法记录访问');
+    return;
+  }
+  
+  const viewData = {
+    profile_id: profileId
+  };
+  
+  console.log('访问数据:', viewData);
   
   try {
-    await client.from('page_views').insert({
-      profile_id: profileId,
-      ip_address: null, // 保护隐私，不记录IP
-      user_agent: navigator.userAgent,
-      referrer: document.referrer
-    });
+    const { error } = await client.from('page_views').insert(viewData);
+    
+    if (error) {
+      console.error('记录访问失败:', error);
+    } else {
+      console.log('访问记录成功');
+    }
   } catch (error) {
-    console.error('Failed to record page view:', error);
+    console.error('记录访问出错:', error);
   }
 }
 
