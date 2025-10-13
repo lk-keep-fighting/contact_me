@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>图片上传测试</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 p-8">
+  <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
+    <h1 class="text-2xl font-bold mb-6">图片上传功能测试</h1>
+    
+    <!-- 测试区域 1: 头像上传 -->
+    <div class="mb-8">
+      <h2 class="text-lg font-semibold mb-4">测试 1: 头像上传</h2>
+      <div class="flex items-center space-x-4">
+        <img id="avatarPreview" src="https://api.dicebear.com/7.x/avataaars/svg?seed=test" alt="头像预览" class="w-20 h-20 rounded-full border-2 border-gray-300">
+        <div class="flex-1">
+          <input id="avatarUrl" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2" placeholder="图片 URL" readonly>
+          <div id="avatarUploadContainer"></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 测试区域 2: 二维码上传 -->
+    <div class="mb-8">
+      <h2 class="text-lg font-semibold mb-4">测试 2: 二维码上传</h2>
+      <div class="space-y-2">
+        <input id="qrUrl" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="二维码 URL" readonly>
+        <div id="qrUploadContainer"></div>
+        <div id="qrPreviewContainer" class="hidden mt-2">
+          <img id="qrPreview" src="" alt="二维码预览" class="w-32 h-32 border border-gray-300 rounded-lg">
+        </div>
+      </div>
+    </div>
+    
+    <!-- 测试区域 3: 产品图片上传 -->
+    <div class="mb-8">
+      <h2 class="text-lg font-semibold mb-4">测试 3: 产品图片上传</h2>
+      <div class="space-y-2">
+        <input id="productUrl" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="产品图片 URL" readonly>
+        <div id="productUploadContainer"></div>
+        <div id="productPreviewContainer" class="hidden mt-2">
+          <img id="productPreview" src="" alt="产品图片预览" class="w-full h-48 object-cover border border-gray-300 rounded-lg">
+        </div>
+      </div>
+    </div>
+    
+    <!-- 测试结果 -->
+    <div class="bg-gray-50 rounded-lg p-4">
+      <h2 class="text-lg font-semibold mb-2">测试结果</h2>
+      <div id="testResults" class="space-y-2 text-sm">
+        <p class="text-gray-600">请上传图片进行测试...</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Scripts -->
+  <script src="/js/config.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script src="/js/upload.js"></script>
+  
+  <script>
+    // 初始化上传组件
+    function initTestUploaders() {
+      const resultsDiv = document.getElementById('testResults');
+      
+      function logResult(message, type = 'info') {
+        const p = document.createElement('p');
+        p.className = type === 'success' ? 'text-green-600' : type === 'error' ? 'text-red-600' : 'text-blue-600';
+        p.innerHTML = `<i class='bx ${type === 'success' ? 'bx-check-circle' : type === 'error' ? 'bx-error-circle' : 'bx-info-circle'} align-[-2px]'></i> ${message}`;
+        resultsDiv.appendChild(p);
+        resultsDiv.scrollTop = resultsDiv.scrollHeight;
+      }
+      
+      // 1. 头像上传
+      const avatarUploader = window.ImageUploader.createImageUploader({
+        inputId: 'avatarUrl',
+        previewId: 'avatarPreview',
+        onSuccess: (url) => {
+          logResult(`头像上传成功: ${url}`, 'success');
+        },
+        onError: (error) => {
+          logResult(`头像上传失败: ${error.message}`, 'error');
+        }
+      });
+      document.getElementById('avatarUploadContainer').appendChild(avatarUploader);
+      logResult('头像上传组件已初始化');
+      
+      // 2. 二维码上传
+      const qrUploader = window.ImageUploader.createImageUploader({
+        inputId: 'qrUrl',
+        onSuccess: (url) => {
+          const preview = document.getElementById('qrPreview');
+          const container = document.getElementById('qrPreviewContainer');
+          preview.src = url;
+          container.classList.remove('hidden');
+          logResult(`二维码上传成功: ${url}`, 'success');
+        },
+        onError: (error) => {
+          logResult(`二维码上传失败: ${error.message}`, 'error');
+        }
+      });
+      document.getElementById('qrUploadContainer').appendChild(qrUploader);
+      logResult('二维码上传组件已初始化');
+      
+      // 3. 产品图片上传
+      const productUploader = window.ImageUploader.createImageUploader({
+        inputId: 'productUrl',
+        onSuccess: (url) => {
+          const preview = document.getElementById('productPreview');
+          const container = document.getElementById('productPreviewContainer');
+          preview.src = url;
+          container.classList.remove('hidden');
+          logResult(`产品图片上传成功: ${url}`, 'success');
+        },
+        onError: (error) => {
+          logResult(`产品图片上传失败: ${error.message}`, 'error');
+        }
+      });
+      document.getElementById('productUploadContainer').appendChild(productUploader);
+      logResult('产品图片上传组件已初始化');
+    }
+    
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('页面加载完成');
+      
+      // 检查配置
+      if (!window.__APP_CONFIG__) {
+        alert('配置文件未加载，请检查 js/config.js');
+        return;
+      }
+      
+      // 检查 Supabase
+      if (!window.supabase) {
+        alert('Supabase SDK 未加载');
+        return;
+      }
+      
+      // 检查上传工具
+      if (!window.ImageUploader) {
+        alert('图片上传工具未加载，请检查 js/upload.js');
+        return;
+      }
+      
+      initTestUploaders();
+    });
+  </script>
+</body>
+</html>

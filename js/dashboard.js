@@ -28,6 +28,7 @@ async function init() {
   currentUser = user;
   await loadUserProfile();
   setupEventListeners();
+  initImageUploaders();
 }
 
 // 确保用户资料存在
@@ -107,7 +108,11 @@ function populateForm(profile) {
   $('#ctaLabel').value = profile.cta_label || '';
   $('#ctaUrl').value = profile.cta_url || '';
   $('#userName').textContent = profile.name || '用户';
-  $('#userAvatar').src = profile.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=user';
+  
+  // 更新头像预览
+  const avatarUrl = profile.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=user';
+  $('#userAvatar').src = avatarUrl;
+  $('#avatarPreview').src = avatarUrl;
 }
 
 // 加载社交链接
@@ -292,7 +297,9 @@ async function saveProfile() {
   
   // 更新用户信息显示
   $('#userName').textContent = profileData.name || '用户';
-  $('#userAvatar').src = profileData.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=user';
+  const avatarUrl = profileData.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=user';
+  $('#userAvatar').src = avatarUrl;
+  $('#avatarPreview').src = avatarUrl;
   
   return currentProfile;
 }
@@ -494,3 +501,94 @@ async function deleteProduct(id) {
 
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', init);
+
+// 初始化图片上传组件
+function initImageUploaders() {
+  // 头像上传
+  const avatarUploader = window.ImageUploader.createImageUploader({
+    inputId: 'profileAvatar',
+    previewId: 'avatarPreview',
+    onSuccess: (url) => {
+      $('#userAvatar').src = url;
+      console.log('头像上传成功:', url);
+    },
+    onError: (error) => {
+      console.error('头像上传失败:', error);
+    }
+  });
+  $('#avatarUploadContainer').appendChild(avatarUploader);
+  
+  // 二维码上传
+  const qrUploader = window.ImageUploader.createImageUploader({
+    inputId: 'socialQr',
+    onSuccess: (url) => {
+      const previewContainer = $('#qrPreviewContainer');
+      const preview = $('#qrPreview');
+      preview.src = url;
+      previewContainer.classList.remove('hidden');
+      console.log('二维码上传成功:', url);
+    },
+    onError: (error) => {
+      console.error('二维码上传失败:', error);
+    }
+  });
+  $('#qrUploadContainer').appendChild(qrUploader);
+  
+  // 产品图片上传
+  const productImageUploader = window.ImageUploader.createImageUploader({
+    inputId: 'productImage',
+    onSuccess: (url) => {
+      const previewContainer = $('#productImagePreviewContainer');
+      const preview = $('#productImagePreview');
+      preview.src = url;
+      previewContainer.classList.remove('hidden');
+      console.log('产品图片上传成功:', url);
+    },
+    onError: (error) => {
+      console.error('产品图片上传失败:', error);
+    }
+  });
+  $('#productImageUploadContainer').appendChild(productImageUploader);
+  
+  // 设置预览功能
+  setupQrPreview();
+  setupProductImagePreview();
+}
+
+// 监听二维码输入框变化
+function setupQrPreview() {
+  const qrInput = $('#socialQr');
+  const previewContainer = $('#qrPreviewContainer');
+  const preview = $('#qrPreview');
+  
+  if (qrInput) {
+    qrInput.addEventListener('input', () => {
+      const url = qrInput.value.trim();
+      if (url) {
+        preview.src = url;
+        previewContainer.classList.remove('hidden');
+      } else {
+        previewContainer.classList.add('hidden');
+      }
+    });
+  }
+}
+
+// 监听产品图片输入框变化
+function setupProductImagePreview() {
+  const imageInput = $('#productImage');
+  const previewContainer = $('#productImagePreviewContainer');
+  const preview = $('#productImagePreview');
+  
+  if (imageInput) {
+    imageInput.addEventListener('input', () => {
+      const url = imageInput.value.trim();
+      if (url) {
+        preview.src = url;
+        previewContainer.classList.remove('hidden');
+      } else {
+        previewContainer.classList.add('hidden');
+      }
+    });
+  }
+}
