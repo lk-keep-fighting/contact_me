@@ -31,7 +31,7 @@
     <div class="section warning">
       <h2>⚠️ 问题诊断：验证邮件跳转错误</h2>
       <p><strong>问题：</strong>注册验证邮件链接跳转到 localhost:3000</p>
-      <p><strong>应该跳转到：</strong>https://contact-me.ydtpt.com/</p>
+      <p><strong>应该跳转到：</strong>https://contact-me.dev/</p>
       <p><strong>原因：</strong>Supabase项目的Site URL配置错误</p>
     </div>
 
@@ -45,16 +45,16 @@
         <li>导航到 <strong>Settings → Authentication</strong></li>
         <li>在 <strong>"Site URL"</strong> 字段中，将：</li>
         <div class="code">❌ 当前值: http://localhost:3000</div>
-        <div class="code">✅ 改为: https://contact-me.ydtpt.com</div>
+        <div class="code">✅ 改为: https://contact-me.dev</div>
       </ol>
 
       <h3>2. 配置允许的重定向URL</h3>
       <p>在同一页面的 <strong>"Additional Redirect URLs"</strong> 部分添加：</p>
       <div class="code">
-        https://contact-me.ydtpt.com/**<br>
-        https://contact-me.ydtpt.com/dashboard.html<br>
-        https://contact-me.ydtpt.com/login.html<br>
-        https://contact-me.ydtpt.com/redirect.html
+        https://contact-me.dev/**<br>
+        https://contact-me.dev/dashboard.html<br>
+        https://contact-me.dev/login.html<br>
+        https://contact-me.dev/redirect.html
       </div>
     </div>
 
@@ -94,7 +94,7 @@ Supabase配置:
 - URL: ${cfg.supabaseUrl || '未配置'}
 - Key: ${cfg.supabaseKey ? cfg.supabaseKey.substring(0, 20) + '...' : '未配置'}
 
-期望的Site URL: https://contact-me.ydtpt.com
+期望的Site URL: https://contact-me.dev
       `;
       document.getElementById('currentInfo').textContent = info;
     }
@@ -111,7 +111,7 @@ Supabase配置:
       document.getElementById('testResults').innerHTML = '';
       
       const currentDomain = window.location.hostname;
-      const expectedDomain = 'contact-me.ydtpt.com';
+      const expectedDomain = 'contact-me.dev';
       
       if (currentDomain === expectedDomain) {
         log('✅ 当前正在正确的生产域名上访问', 'success');
@@ -162,19 +162,19 @@ Supabase配置:
       log('ℹ️ 认证流程测试说明:', 'info');
       log('1. 确保已在Supabase中配置了正确的Site URL', 'info');
       log('2. 注册一个测试邮箱账号', 'info');
-      log('3. 检查验证邮件中的链接是否指向 https://contact-me.ydtpt.com', 'info');
+      log('3. 检查验证邮件中的链接是否指向 https://contact-me.dev', 'info');
       
       // 显示当前认证设置应该的样子
       const correctConfig = `
 正确的Supabase认证设置:
 
-Site URL: https://contact-me.ydtpt.com
+Site URL: https://contact-me.dev
 
 Additional Redirect URLs:
-- https://contact-me.ydtpt.com/**
-- https://contact-me.ydtpt.com/dashboard.html
-- https://contact-me.ydtpt.com/login.html
-- https://contact-me.ydtpt.com/redirect.html
+- https://contact-me.dev/**
+- https://contact-me.dev/dashboard.html
+- https://contact-me.dev/login.html
+- https://contact-me.dev/redirect.html
       `;
       
       log(correctConfig, 'info');
