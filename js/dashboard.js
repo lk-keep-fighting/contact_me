@@ -7,6 +7,7 @@ function $all(sel) { return Array.from(document.querySelectorAll(sel)); }
 let supabase = null;
 let currentUser = null;
 let currentProfile = null;
+let handleCheckTimeout = null; // 防抖计时器
 
 // 初始化
 async function init() {
@@ -63,11 +64,47 @@ async function ensureUserProfile() {
       }
       
       console.log('用户资料创建成功');
+      
+      // 为新用户生成默认handle
+      await ensureDefaultHandle();
     } else {
       console.log('用户资料已存在');
     }
   } catch (error) {
     console.error('确保用户资料存在时出错:', error);
+  }
+}
+
+// 为新用户确保默认handle
+async function ensureDefaultHandle() {
+  try {
+    // 检查是否已有profile
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('handle')
+      .eq('user_id', currentUser.id)
+      .single();
+    
+    // 如果已有profile且有handle，则不需要处理
+    if (existingProfile?.handle) {
+      return;
+    }
+    
+    // 生成默认handle
+    const userName = currentUser.user_metadata?.name || '新用户';
+    const userEmail = currentUser.email;
+    const defaultHandle = await generateDefaultHandle(userName, userEmail);
+    
+    console.log('为新用户生成默认handle:', defaultHandle);
+    
+    // 设置到输入框
+    $('#profileHandle').value = defaultHandle;
+    
+    // 显示成功提示
+    showHandleValidation(true, '已为您生成默认标识，可自由修改');
+    
+  } catch (error) {
+    console.error('生成默认handle失败:', error);
   }
 }
 
@@ -113,6 +150,17 @@ function populateForm(profile) {
   const avatarUrl = profile.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=user';
   $('#userAvatar').src = avatarUrl;
   $('#avatarPreview').src = avatarUrl;
+  
+  // 更新URL预览
+  const preview = $('#handlePreview');
+  if (preview) {
+    preview.textContent = profile.handle || 'your-handle';
+  }
+  
+  // 如果handle存在，显示成功状态
+  if (profile.handle) {
+    showHandleValidation(true, '当前标识');
+  }
 }
 
 // 加载社交链接
@@ -237,8 +285,24 @@ async function loadAnalytics() {
 // 设置事件监听器
 function setupEventListeners() {
   // 保存基本信息
-  $all('#profileName, #profileTitle, #profileBio, #profileTags, #profileAvatar, #profileHandle, #themeColor, #ctaLabel, #ctaUrl').forEach(input => {
+  $all('#profileName, #profileTitle, #profileBio, #profileTags, #profileAvatar, #themeColor, #ctaLabel, #ctaUrl').forEach(input => {
     input.addEventListener('blur', saveProfile);
+  });
+  
+  // 页面标识特殊处理
+  const handleInput = $('#profileHandle');
+  handleInput.addEventListener('input', handleInputChange);
+  handleInput.addEventListener('blur', async () => {
+    const handle = handleInput.value.trim();
+    if (handle) {
+      await validateHandleInRealTime(handle);
+      // 只有在验证通过后才保存
+      try {
+        await saveProfile();
+      } catch (error) {
+        console.log('保存失败（handle验证问题）:', error.message);
+      }
+    }
   });
   
   // 添加社交链接
@@ -276,9 +340,202 @@ function setupEventListeners() {
   $('#logoutBtn').addEventListener('click', logout);
 }
 
+// 生成唯一的默认handle
+async function generateDefaultHandle(name, email) {
+  // 尝试从姓名生成
+  let baseHandle = name ? name.toLowerCase()
+    .replace(/[\s\u4e00-\u9fff]+/g, '') // 移除中文和空格
+    .replace(/[^a-z0-9]/g, '') // 只保留字母和数字
+    .substring(0, 20) : '';
+  
+  // 如果姓名不可用，从邮箱生成
+  if (!baseHandle && email) {
+    baseHandle = email.split('@')[0]
+      .replace(/[^a-z0-9]/g, '')
+      .substring(0, 20);
+  }
+  
+  // 如果还是没有，使用默认值
+  if (!baseHandle) {
+    baseHandle = 'user';
+  }
+  
+  // 检查唯一性并添加数字后缀
+  let handle = baseHandle;
+  let counter = 1;
+  
+  while (await checkHandleExists(handle)) {
+    handle = `${baseHandle}${counter}`;
+    counter++;
+    if (counter > 999) break; // 防止无限循环
+  }
+  
+  return handle;
+}
+
+// 检查handle是否已存在
+async function checkHandleExists(handle, excludeCurrentProfile = true) {
+  if (!handle) return false;
+  
+  let query = supabase
+    .from('profiles')
+    .select('id')
+    .eq('handle', handle);
+  
+  // 如果是更新现有资料，排除当前资料
+  if (excludeCurrentProfile && currentProfile) {
+    query = query.neq('id', currentProfile.id);
+  }
+  
+  const { data, error } = await query.single();
+  
+  if (error && error.code !== 'PGRST116') {
+    console.error('检查handle失败:', error);
+    return false;
+  }
+  
+  return !!data;
+}
+
+// 验证handle有效性
+function validateHandle(handle) {
+  if (!handle || handle.trim().length === 0) {
+    return { valid: false, message: '页面标识不能为空' };
+  }
+  
+  if (handle.length < 3) {
+    return { valid: false, message: '页面标识至少需要3个字符' };
+  }
+  
+  if (handle.length > 30) {
+    return { valid: false, message: '页面标识不能超过30个字符' };
+  }
+  
+  if (!/^[a-z0-9][a-z0-9_-]*[a-z0-9]$/.test(handle)) {
+    return { valid: false, message: '页面标识只能包含小写字母、数字、下划线和短横线，且不能以特殊符号开头或结尾' };
+  }
+  
+  // 检查保留字
+  const reservedWords = ['admin', 'api', 'www', 'mail', 'ftp', 'blog', 'help', 'support', 'contact', 'about', 'login', 'register', 'dashboard', 'profile', 'settings'];
+  if (reservedWords.includes(handle.toLowerCase())) {
+    return { valid: false, message: '该标识为系统保留字，请选择其他标识' };
+  }
+  
+  return { valid: true, message: '' };
+}
+
+// 显示handle验证状态
+function showHandleValidation(isValid, message, isChecking = false) {
+  const input = $('#profileHandle');
+  const container = input.parentElement;
+  
+  // 移除现有的提示
+  const existingMsg = container.querySelector('.handle-validation');
+  if (existingMsg) existingMsg.remove();
+  
+  // 重置输入框样式
+  input.classList.remove('border-red-500', 'border-green-500', 'border-yellow-500');
+  
+  if (isChecking) {
+    input.classList.add('border-yellow-500');
+    const msg = document.createElement('p');
+    msg.className = 'handle-validation text-xs text-yellow-600 mt-1';
+    msg.innerHTML = '<i class="bx bx-loader bx-spin"></i> 检查可用性...';
+    container.appendChild(msg);
+  } else if (!isValid) {
+    input.classList.add('border-red-500');
+    const msg = document.createElement('p');
+    msg.className = 'handle-validation text-xs text-red-600 mt-1';
+    msg.innerHTML = `<i class="bx bx-error-circle"></i> ${message}`;
+    container.appendChild(msg);
+  } else if (message) {
+    input.classList.add('border-green-500');
+    const msg = document.createElement('p');
+    msg.className = 'handle-validation text-xs text-green-600 mt-1';
+    msg.innerHTML = `<i class="bx bx-check-circle"></i> ${message}`;
+    container.appendChild(msg);
+  }
+}
+
+// 处理handle输入变化
+function handleInputChange() {
+  const input = $('#profileHandle');
+  const handle = input.value.trim().toLowerCase();
+  
+  // 更新输入框为小写
+  input.value = handle;
+  
+  // 更新URL预览
+  const preview = $('#handlePreview');
+  if (preview) {
+    preview.textContent = handle || 'your-handle';
+  }
+  
+  // 清除之前的计时器
+  if (handleCheckTimeout) {
+    clearTimeout(handleCheckTimeout);
+  }
+  
+  // 如果为空，清除提示
+  if (!handle) {
+    showHandleValidation(false, '');
+    return;
+  }
+  
+  // 防抖延迟500ms后验证
+  handleCheckTimeout = setTimeout(async () => {
+    await validateHandleInRealTime(handle);
+  }, 500);
+}
+
+// 实时验证handle
+async function validateHandleInRealTime(handle) {
+  // 显示检查状态
+  showHandleValidation(true, '', true);
+  
+  // 首先验证格式
+  const validation = validateHandle(handle);
+  if (!validation.valid) {
+    showHandleValidation(false, validation.message);
+    return false;
+  }
+  
+  // 检查唯一性
+  try {
+    const exists = await checkHandleExists(handle);
+    if (exists) {
+      showHandleValidation(false, '该标识已被使用，请选择其他标识');
+      return false;
+    } else {
+      showHandleValidation(true, '标识可用');
+      return true;
+    }
+  } catch (error) {
+    console.error('检查handle失败:', error);
+    showHandleValidation(false, '检查失败，请稍后重试');
+    return false;
+  }
+}
+
 // 保存资料
 async function saveProfile() {
   if (!currentUser) return;
+  
+  const handle = $('#profileHandle').value.trim();
+  
+  // 验证handle
+  const validation = validateHandle(handle);
+  if (!validation.valid) {
+    showHandleValidation(false, validation.message);
+    throw new Error(validation.message);
+  }
+  
+  // 检查handle唯一性
+  const exists = await checkHandleExists(handle);
+  if (exists) {
+    showHandleValidation(false, '该页面标识已被使用，请选择其他标识');
+    throw new Error('该页面标识已被使用');
+  }
   
   const profileData = {
     user_id: currentUser.id,
@@ -287,7 +544,7 @@ async function saveProfile() {
     bio: $('#profileBio').value,
     tags: $('#profileTags').value,
     avatar_url: $('#profileAvatar').value,
-    handle: $('#profileHandle').value,
+    handle: handle,
     theme_color: $('#themeColor').value,
     cta_label: $('#ctaLabel').value,
     cta_url: $('#ctaUrl').value,
