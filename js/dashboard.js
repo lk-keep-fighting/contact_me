@@ -147,7 +147,7 @@ function populateForm(profile) {
   $('#userName').textContent = profile.name || '用户';
   
   // 更新头像预览
-  const avatarUrl = profile.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=user';
+  const avatarUrl = profile.avatar_url || '/assets/images/default-avatar.svg';
   $('#userAvatar').src = avatarUrl;
   $('#avatarPreview').src = avatarUrl;
   
@@ -580,7 +580,7 @@ async function saveProfile() {
   
   // 更新用户信息显示
   $('#userName').textContent = profileData.name || '用户';
-  const avatarUrl = profileData.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=user';
+  const avatarUrl = profileData.avatar_url || '/assets/images/default-avatar.svg';
   $('#userAvatar').src = avatarUrl;
   $('#avatarPreview').src = avatarUrl;
   

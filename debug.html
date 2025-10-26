@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>调试页面 - 联系我</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/assets/vendor/tailwindcss/tailwindcss.js"></script>
 </head>
 <body class="bg-gray-100 p-8">
   <div class="max-w-2xl mx-auto">
@@ -55,9 +55,9 @@
   </div>
 
   <script src="/js/config.js"></script>
-  <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script src="/assets/vendor/supabase/supabase.js"></script>
   <script>
-    const cfg = window.__APP_CONFIG__;
+    const cfg = window.__APP_CONFIG__ || {};
     let supabase = null;
 
     function $(sel) { return document.querySelector(sel); }

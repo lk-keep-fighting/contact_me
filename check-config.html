@@ -80,6 +80,7 @@
   </div>
 
   <script src="/js/config.js"></script>
+  <script src="/assets/vendor/supabase/supabase.js"></script>
   <script>
     const cfg = window.__APP_CONFIG__ || {};
     
@@ -188,7 +189,7 @@ Additional Redirect URLs:
       if (!window.supabase) {
         setTimeout(() => {
           const script = document.createElement('script');
-          script.src = 'https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js';
+          script.src = '/assets/vendor/supabase/supabase.js';
           document.head.appendChild(script);
         }, 1000);
       }
