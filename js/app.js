@@ -52,13 +52,96 @@ const shareTemplates = [
     footerSublineColor: 'rgba(226, 232, 240, 0.7)'
   }
 ];
+const RESERVED_HANDLE_SEGMENTS = new Set([
+  'index',
+  'index.html',
+  '404',
+  '404.html',
+  'profile',
+  'profile.html',
+  'profiles',
+  'page',
+  'pages',
+  'p',
+  'user',
+  'users',
+  'u',
+  'login',
+  'login.html',
+  'dashboard',
+  'dashboard.html',
+  'home',
+  'home.html',
+  'demo',
+  'demo.html',
+  'redirect',
+  'redirect.html',
+  'debug',
+  'debug.html',
+  'test',
+  'test.html',
+  'test-db',
+  'test-db.html',
+  'test-upload',
+  'test-upload.html',
+  'test-preview',
+  'test-preview.html',
+  'check-config',
+  'check-config.html',
+  'config',
+  'config.html',
+  'config.js',
+  'assets',
+  'js',
+  'api',
+  'saas',
+  'supabase',
+  'favicon.ico',
+  'favicon.svg',
+  'robots.txt'
+]);
+const HANDLE_PATH_PREFIXES = new Set(['p', 'page', 'pages', 'profile', 'profiles', 'u', 'user', 'users']);
+const BLOCKED_PARENT_SEGMENTS = new Set(['assets', 'js', 'css', 'vendor', 'images', 'static', 'fonts']);
 let currentShareTemplateId = shareTemplates[0]?.id || 'aurora';
 let currentProfileData = null;
 let shareStatusTimer = null;
 
+function extractHandleFromPath(pathname = '') {
+  if (!pathname) return null;
+  const cleaned = decodeURIComponent(pathname).replace(/\/+$/, '');
+  if (!cleaned || cleaned === '' || cleaned === '/') return null;
+  const segments = cleaned.split('/').filter(Boolean);
+  if (!segments.length) return null;
+
+  const candidate = segments[segments.length - 1];
+  const normalized = candidate.trim().toLowerCase();
+  if (!normalized || candidate.includes('.') || RESERVED_HANDLE_SEGMENTS.has(normalized)) return null;
+
+  let parentSegments = segments.slice(0, -1).map(segment => segment.trim());
+  while (parentSegments.length && HANDLE_PATH_PREFIXES.has(parentSegments[parentSegments.length - 1].toLowerCase())) {
+    parentSegments.pop();
+  }
+  if (parentSegments.some(segment => RESERVED_HANDLE_SEGMENTS.has(segment.toLowerCase()))) return null;
+  if (parentSegments.some(segment => BLOCKED_PARENT_SEGMENTS.has(segment.toLowerCase()))) return null;
+
+  return normalized;
+}
+
 function parseQuery() {
-  const p = new URLSearchParams(location.search);
-  return { handle: p.get('handle'), id: p.get('id') };
+  const params = new URLSearchParams(location.search);
+  let handle = params.get('handle');
+  const id = params.get('id');
+
+  if (handle) {
+    handle = handle.trim().toLowerCase();
+  }
+
+  if (!handle) {
+    const pathHandle = extractHandleFromPath(location.pathname || '');
+    if (pathHandle) handle = pathHandle;
+  }
+
+  return { handle, id };
 }
 
 function createClient() {
@@ -159,22 +242,35 @@ function hexToRgba(hex, alpha = 1) {
 
 function getShareUrl() {
   if (typeof window === 'undefined') return '';
-  const origin = location.origin || '';
+  const fallback = cfg.share || {};
   try {
-    const base = origin ? new URL('/profile.html', origin) : new URL(location.href);
-    if (currentProfileData?.handle) {
-      base.search = '';
-      base.searchParams.set('handle', currentProfileData.handle);
-      return base.toString();
+    const baseUrl = new URL(location.href);
+    const baseDir = baseUrl.pathname.replace(/\/[^/]*$/, '');
+    const prefix = baseDir && baseDir !== '/' ? baseDir : '';
+    const handle = currentProfileData?.handle?.toString().trim().toLowerCase();
+
+    if (handle) {
+      const friendlyPath = `${prefix}/${handle}`.replace(/\/{2,}/g, '/');
+      const friendlyUrl = new URL(baseUrl.href);
+      friendlyUrl.pathname = friendlyPath.startsWith('/') ? friendlyPath : `/${friendlyPath}`;
+      friendlyUrl.search = '';
+      friendlyUrl.hash = '';
+      return friendlyUrl.toString();
     }
+
     if (window.currentProfileId) {
-      base.search = '';
-      base.searchParams.set('id', window.currentProfileId);
-      return base.toString();
+      const profilePath = `${prefix}/profile.html`.replace(/\/{2,}/g, '/');
+      const profileUrl = new URL(baseUrl.href);
+      profileUrl.pathname = profilePath.startsWith('/') ? profilePath : `/${profilePath}`;
+      profileUrl.search = '';
+      profileUrl.hash = '';
+      profileUrl.searchParams.set('id', window.currentProfileId);
+      return profileUrl.toString();
     }
-    return location.href;
+
+    return location.href || fallback.url || '';
   } catch (error) {
-    return location.href;
+    return fallback.url || location.href;
   }
 }
 

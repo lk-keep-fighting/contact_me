@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>正在跳转...</title>
+  <meta name="robots" content="noindex">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #0f172a;
+    }
+    .wrapper {
+      text-align: center;
+      padding: 2.5rem 2rem;
+      background: rgba(255, 255, 255, 0.78);
+      border-radius: 1.5rem;
+      box-shadow: 0 24px 48px rgba(15, 23, 42, 0.12);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      max-width: 360px;
+      width: calc(100% - 2rem);
+    }
+    .spinner {
+      width: 36px;
+      height: 36px;
+      margin: 0 auto 1.25rem;
+      border-radius: 999px;
+      border: 3px solid rgba(14, 165, 233, 0.25);
+      border-top-color: #0ea5e9;
+      animation: spin 1s linear infinite;
+    }
+    p {
+      margin: 0;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: #475569;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrapper">
+    <div class="spinner"></div>
+    <p>正在为你定位页面，请稍候...</p>
+  </main>
+  <script>
+    (function() {
+      const RESERVED = new Set([
+        'index',
+        'index.html',
+        '404',
+        '404.html',
+        'profile',
+        'profile.html',
+        'profiles',
+        'page',
+        'pages',
+        'p',
+        'user',
+        'users',
+        'u',
+        'login',
+        'login.html',
+        'dashboard',
+        'dashboard.html',
+        'home',
+        'home.html',
+        'demo',
+        'demo.html',
+        'redirect',
+        'redirect.html',
+        'debug',
+        'debug.html',
+        'test',
+        'test.html',
+        'test-db',
+        'test-db.html',
+        'test-upload',
+        'test-upload.html',
+        'test-preview',
+        'test-preview.html',
+        'check-config',
+        'check-config.html',
+        'config',
+        'config.html',
+        'config.js',
+        'assets',
+        'js',
+        'api',
+        'saas',
+        'supabase',
+        'favicon.ico',
+        'favicon.svg',
+        'robots.txt'
+      ]);
+      const PREFIXES = new Set(['p', 'page', 'pages', 'profile', 'profiles', 'u', 'user', 'users']);
+      const BLOCKED = new Set(['assets', 'js', 'css', 'vendor', 'images', 'static', 'fonts']);
+
+      function parseHandle(pathname) {
+        if (!pathname) return null;
+        const cleaned = decodeURIComponent(pathname).replace(/\/+$/, '');
+        if (!cleaned || cleaned === '' || cleaned === '/') return null;
+        const segments = cleaned.split('/').filter(Boolean);
+        if (!segments.length) return null;
+        if (segments.some(segment => BLOCKED.has(segment.toLowerCase()))) return null;
+
+        const candidate = segments[segments.length - 1];
+        const normalized = candidate.trim().toLowerCase();
+        if (!normalized || candidate.includes('.') || RESERVED.has(normalized)) return null;
+
+        let baseSegments = segments.slice(0, -1).map(segment => segment.trim()).filter(Boolean);
+        if (baseSegments.some(segment => RESERVED.has(segment.toLowerCase()))) return null;
+        while (baseSegments.length && PREFIXES.has(baseSegments[baseSegments.length - 1].toLowerCase())) {
+          baseSegments.pop();
+        }
+        baseSegments = baseSegments.map(segment => decodeURIComponent(segment));
+        return { handle: normalized, baseSegments };
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      let handle = params.get('handle');
+      if (handle) handle = handle.trim().toLowerCase();
+
+      let baseSegments = [];
+      if (!handle) {
+        const result = parseHandle(window.location.pathname || '');
+        if (result) {
+          handle = result.handle;
+          baseSegments = result.baseSegments;
+        }
+      }
+
+      if (handle) {
+        const prefixSegments = baseSegments.map(segment => encodeURIComponent(segment));
+        const prefix = prefixSegments.length ? `/${prefixSegments.join('/')}` : '';
+        const targetPath = `${prefix}/profile.html?handle=${encodeURIComponent(handle)}`.replace(/\/{2,}/g, '/');
+        const finalPath = targetPath.startsWith('/') ? targetPath : `/${targetPath}`;
+        window.location.replace(finalPath);
+        return;
+      }
+
+      const currentPath = window.location.pathname || '';
+      const baseDir = currentPath.replace(/\/[^/]*$/, '');
+      const fallbackPath = (baseDir && baseDir !== '/' ? `${baseDir}/index.html` : '/index.html').replace(/\/{2,}/g, '/');
+      window.location.replace(fallbackPath);
+    })();
+  </script>
+</body>
+</html>
