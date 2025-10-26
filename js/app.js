@@ -99,7 +99,7 @@ function renderProducts(products) {
     card.className = 'glass rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700';
     const img = document.createElement('img');
     img.className = 'w-full h-44 object-cover bg-slate-100 dark:bg-slate-800';
-    img.src = p.image || 'https://placehold.co/800x400?text=Product';
+    img.src = p.image || '/assets/images/product-placeholder.png';
     img.alt = p.name || 'product';
     const box = document.createElement('div');
     box.className = 'p-4';
@@ -264,7 +264,7 @@ function buildPosterElement(template, profile, shareUrl) {
   const avatarWrap = document.createElement('div');
   avatarWrap.className = 'share-avatar';
   const avatarImg = document.createElement('img');
-  avatarImg.src = profile.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=contactme';
+  avatarImg.src = profile.avatar || '/assets/images/default-avatar.svg';
   avatarImg.alt = profile.name || 'avatar';
   avatarImg.crossOrigin = 'anonymous';
   avatarImg.referrerPolicy = 'no-referrer';
@@ -581,15 +581,15 @@ function hydrateFallbackStatic() {
   const demo = {
     name: '低代码分享',
     title: '低代码技术专家 | 开发者',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=lowcode',
+    avatar: '/assets/images/default-avatar.svg',
     handle: 'lowcode',
     badges: ['低代码', '技术分享', '开发者'],
     bio: '专注低代码技术分享，帮助开发者快速构建应用，提升开发效率。',
     cta: { url: '#', label: '技术交流' },
     themeColor: '#0ea5e9',
     socials: [
-      { name: 'WeChat', label: '个人微信', icon: 'bx-qr', qr: { url: 'https://xzzmlk.oss-cn-shanghai.aliyuncs.com/wx.jpg', note: '醒着做梦' } },
-      { name: 'WeChatOfficial', label: '微信公众号', icon: 'bx-qr', qr: { url: 'https://xzzmlk.oss-cn-shanghai.aliyuncs.com/lowcode-share.JPG', note: '低代码分享' } },
+      { name: 'WeChat', label: '个人微信', icon: 'bx-qr', qr: { url: '/assets/images/demo-wechat.jpg', note: '醒着做梦' } },
+      { name: 'WeChatOfficial', label: '微信公众号', icon: 'bx-qr', qr: { url: '/assets/images/demo-wechat-official.jpg', note: '低代码分享' } },
       { name: 'Email', label: '邮箱', icon: 'bx-envelope', url: 'mailto:442969153@qq.com' }
     ],
     products: [

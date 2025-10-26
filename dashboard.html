@@ -7,11 +7,9 @@
   <title>联系我 - 管理后台</title>
   <meta name="description" content="管理你的个人介绍页面，一键分享引流">
   <link rel="icon" href="/favicon.svg">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="/assets/vendor/tailwindcss/tailwindcss.js"></script>
+  <link rel="stylesheet" href="/assets/vendor/boxicons/css/boxicons.min.css">
+  <link rel="stylesheet" href="/assets/vendor/inter/inter.css">
   <style>
     :root { --accent: #0ea5e9; }
     html, body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
@@ -65,7 +63,7 @@
             <i class='bx bx-send align-[-2px]'></i> 发布
           </button>
           <div class="flex items-center space-x-2">
-            <img id="userAvatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" alt="avatar" class="w-8 h-8 rounded-full">
+            <img id="userAvatar" src="/assets/images/default-avatar.svg" alt="avatar" class="w-8 h-8 rounded-full">
             <span id="userName" class="text-sm font-medium">用户名</span>
             <button id="logoutBtn" class="ml-3 px-3 py-1 text-sm text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="退出登录">
               <i class='bx bx-log-out align-[-2px]'></i>
@@ -103,7 +101,7 @@
             <div class="md:col-span-2">
               <label class="block text-sm font-medium mb-2">头像</label>
               <div class="flex items-center space-x-4">
-                <img id="avatarPreview" src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" alt="头像预览" class="w-20 h-20 rounded-full border-2 border-slate-300 image-preview">
+                <img id="avatarPreview" src="/assets/images/default-avatar.svg" alt="头像预览" class="w-20 h-20 rounded-full border-2 border-slate-300 image-preview">
                 <div class="flex-1">
                   <input id="profileAvatar" type="url" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent mb-2" placeholder="https://example.com/avatar.jpg" readonly>
                   <div id="avatarUploadContainer"></div>
@@ -281,7 +279,7 @@
 
   <!-- App Config & Scripts -->
   <script src="/js/config.js"></script>
-  <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script src="/assets/vendor/supabase/supabase.js"></script>
   <script src="/js/auth-utils.js"></script>
   <script src="/js/upload.js"></script>
   <script src="/js/dashboard.js"></script>
