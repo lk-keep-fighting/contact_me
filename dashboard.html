@@ -10,274 +10,311 @@
   <script src="/assets/vendor/tailwindcss/tailwindcss.js"></script>
   <link rel="stylesheet" href="/assets/vendor/boxicons/css/boxicons.min.css">
   <link rel="stylesheet" href="/assets/vendor/inter/inter.css">
-  <style>
-    :root { --accent: #0ea5e9; }
-    html, body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
-    .glass { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); background: rgba(255,255,255,0.7); }
-    .dark .glass { background: rgba(0,0,0,0.35); }
-    
-    /* 图片上传按钮悬停动画 */
-    .upload-btn {
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .upload-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
-    }
-    .upload-btn:active {
-      transform: translateY(0);
-    }
-    
-    /* 图片预览动画 */
-    .image-preview {
-      transition: all 0.3s ease;
-    }
-    .image-preview:hover {
-      transform: scale(1.05);
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-    }
-    
-    /* 进度条动画 */
-    .progress-bar {
-      animation: pulse 1.5s ease-in-out infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
-    }
-  </style>
+  <link rel="stylesheet" href="/assets/styles/ui.css">
 </head>
-<body class="bg-gradient-to-b from-sky-50 to-white text-slate-800 dark:from-slate-950 dark:to-slate-900 dark:text-slate-100 min-h-screen">
-  <!-- 导航栏 -->
-  <nav class="glass border-b border-slate-200 dark:border-slate-700 sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center h-16">
-        <div class="flex items-center">
-          <a href="/" class="text-xl font-bold text-sky-600">联系我</a>
-        </div>
-        <div class="flex items-center space-x-4">
-          <button id="previewBtn" class="px-4 py-2 text-sm bg-sky-600 text-white rounded-lg hover:bg-sky-500">
-            <i class='bx bx-show align-[-2px]'></i> 预览
-          </button>
-          <button id="publishBtn" class="px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-500">
-            <i class='bx bx-send align-[-2px]'></i> 发布
-          </button>
-          <div class="flex items-center space-x-2">
-            <img id="userAvatar" src="/assets/images/default-avatar.svg" alt="avatar" class="w-8 h-8 rounded-full">
-            <span id="userName" class="text-sm font-medium">用户名</span>
-            <button id="logoutBtn" class="ml-3 px-3 py-1 text-sm text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="退出登录">
-              <i class='bx bx-log-out align-[-2px]'></i>
+<body class="min-h-screen">
+  <div class="flex min-h-screen flex-col bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.12),_transparent_60%)] dark:bg-none">
+    <header class="sticky top-0 z-50 border-b border-border bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 dark:bg-slate-900/80">
+      <div class="container flex h-16 items-center justify-between">
+        <a href="/" class="flex items-center gap-2 text-lg font-semibold text-sky-600">
+          <span>联系我</span>
+          <span class="badge badge-primary hidden sm:inline-flex items-center gap-1">
+            <i class='bx bx-pencil'></i>
+            编辑器
+          </span>
+        </a>
+        <div class="flex items-center gap-3">
+          <div id="saveStatus" class="save-indicator hidden md:inline-flex" data-state="saved">
+            <span class="status-dot"></span>
+            <span data-text>已保存</span>
+          </div>
+          <div class="hidden sm:flex items-center gap-2">
+            <button id="previewBtn" class="btn btn-outline">
+              <i class='bx bx-show'></i>
+              <span class="hidden md:inline">预览</span>
+            </button>
+            <button id="publishBtn" class="btn btn-primary">
+              <i class='bx bx-send'></i>
+              发布
+            </button>
+          </div>
+          <div class="flex items-center gap-3 border-l border-border pl-3">
+            <div class="flex items-center gap-2">
+              <img id="userAvatar" src="/assets/images/default-avatar.svg" alt="avatar" class="h-9 w-9 rounded-full border border-border object-cover">
+              <div class="leading-tight">
+                <p id="userName" class="text-sm font-medium text-foreground">用户名</p>
+                <p class="hidden text-xs text-muted-foreground sm:block">欢迎回来</p>
+              </div>
+            </div>
+            <button id="logoutBtn" class="btn btn-ghost btn-icon" title="退出登录">
+              <i class='bx bx-log-out text-lg'></i>
             </button>
           </div>
         </div>
       </div>
-    </div>
-  </nav>
+    </header>
 
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <!-- 左侧：编辑区域 -->
-      <div class="lg:col-span-2 space-y-6">
-        <!-- 基本信息 -->
-        <div class="glass rounded-xl p-6 border border-slate-200 dark:border-slate-700">
-          <h2 class="text-lg font-semibold mb-4">基本信息</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium mb-2">姓名</label>
-              <input id="profileName" type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="你的姓名">
+    <main class="container flex-1 pb-16 pt-10">
+      <div class="grid gap-6 lg:grid-cols-[minmax(0,440px)_minmax(0,1fr)] lg:gap-8">
+        <section class="space-y-6 lg:space-y-8">
+          <div class="card">
+            <div class="card-header">
+              <div class="section-heading">
+                <div>
+                  <h2 class="card-title">基本资料</h2>
+                  <p class="card-description">完善头像、身份和简介，塑造你的个人品牌形象。</p>
+                </div>
+                <span class="badge badge-muted hidden sm:inline-flex"><i class='bx bx-time-five mr-1'></i>自动保存中</span>
+              </div>
             </div>
-            <div>
-              <label class="block text-sm font-medium mb-2">身份/头衔</label>
-              <input id="profileTitle" type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="创业者 | 产品经理">
-            </div>
-            <div class="md:col-span-2">
-              <label class="block text-sm font-medium mb-2">个人简介</label>
-              <textarea id="profileBio" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="简单介绍一下自己和你的专业领域..."></textarea>
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-2">标签</label>
-              <input id="profileTags" type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="AI,创业,SaaS (用逗号分隔)">
-            </div>
-            <div class="md:col-span-2">
-              <label class="block text-sm font-medium mb-2">头像</label>
-              <div class="flex items-center space-x-4">
-                <img id="avatarPreview" src="/assets/images/default-avatar.svg" alt="头像预览" class="w-20 h-20 rounded-full border-2 border-slate-300 image-preview">
-                <div class="flex-1">
-                  <input id="profileAvatar" type="url" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent mb-2" placeholder="https://example.com/avatar.jpg" readonly>
-                  <div id="avatarUploadContainer"></div>
+            <div class="card-content">
+              <div class="grid gap-5">
+                <div class="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label for="profileName">姓名</label>
+                    <input id="profileName" type="text" class="input" placeholder="你的姓名">
+                  </div>
+                  <div>
+                    <label for="profileTitle">身份 / 头衔</label>
+                    <input id="profileTitle" type="text" class="input" placeholder="创业者 | 产品经理">
+                  </div>
+                </div>
+
+                <div>
+                  <label for="profileBio">个人简介</label>
+                  <textarea id="profileBio" rows="4" class="textarea" placeholder="简单介绍一下自己和你的专业领域..."></textarea>
+                </div>
+
+                <div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,260px)] md:items-start">
+                  <div>
+                    <label for="profileTags">标签</label>
+                    <input id="profileTags" type="text" class="input" placeholder="AI, 创业, SaaS (用逗号分隔)">
+                    <p class="mt-2 text-xs text-muted-foreground">使用标签帮助访客迅速了解你的专长。</p>
+                  </div>
+                  <div>
+                    <label>头像</label>
+                    <div class="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+                      <img id="avatarPreview" src="/assets/images/default-avatar.svg" alt="头像预览" class="h-20 w-20 rounded-full border border-border object-cover shadow-sm">
+                      <div class="flex-1 space-y-2">
+                        <input id="profileAvatar" type="url" class="input" placeholder="https://example.com/avatar.jpg" readonly>
+                        <div id="avatarUploadContainer"></div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- 联系方式 -->
-        <div class="glass rounded-xl p-6 border border-slate-200 dark:border-slate-700">
-          <div class="flex justify-between items-center mb-4">
-            <h2 class="text-lg font-semibold">联系方式</h2>
-            <button id="addSocialBtn" class="px-3 py-1 text-sm bg-sky-600 text-white rounded-lg hover:bg-sky-500">
-              <i class='bx bx-plus align-[-2px]'></i> 添加
-            </button>
-          </div>
-          <div id="socialsList" class="space-y-3">
-            <!-- 动态添加的社交链接 -->
-          </div>
-        </div>
-
-        <!-- 产品/服务 -->
-        <div class="glass rounded-xl p-6 border border-slate-200 dark:border-slate-700">
-          <div class="flex justify-between items-center mb-4">
-            <h2 class="text-lg font-semibold">产品/服务</h2>
-            <button id="addProductBtn" class="px-3 py-1 text-sm bg-sky-600 text-white rounded-lg hover:bg-sky-500">
-              <i class='bx bx-plus align-[-2px]'></i> 添加
-            </button>
-          </div>
-          <div id="productsList" class="space-y-4">
-            <!-- 动态添加的产品 -->
-          </div>
-        </div>
-      </div>
-
-      <!-- 右侧：预览和设置 -->
-      <div class="space-y-6">
-        <!-- 页面预览 -->
-        <div class="glass rounded-xl p-6 border border-slate-200 dark:border-slate-700">
-          <h2 class="text-lg font-semibold mb-4">页面预览</h2>
-          <div class="bg-white rounded-lg border border-slate-200 p-4">
-            <iframe id="previewFrame" src="/profile.html?handle=preview" class="w-full h-96 border-0 rounded"></iframe>
-          </div>
-          <div class="mt-4 text-center">
-            <button id="refreshPreview" class="px-4 py-2 text-sm bg-slate-100 hover:bg-slate-200 rounded-lg">
-              <i class='bx bx-refresh align-[-2px]'></i> 刷新预览
-            </button>
-          </div>
-        </div>
-
-        <!-- 页面设置 -->
-        <div class="glass rounded-xl p-6 border border-slate-200 dark:border-slate-700">
-          <h2 class="text-lg font-semibold mb-4">页面设置</h2>
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium mb-2">页面标识</label>
-              <input id="profileHandle" type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="your-handle" maxlength="30">
-              <p class="text-xs text-slate-500 mt-1">页面URL: contact-me.dev/<strong id="handlePreview">your-handle</strong></p>
+          <div class="card">
+            <div class="card-header">
+              <div class="section-heading">
+                <div>
+                  <h2 class="card-title">联系方式</h2>
+                  <p class="card-description">为访客提供与你联络的官方渠道，支持二维码和备注说明。</p>
+                </div>
+                <button id="addSocialBtn" class="btn btn-primary btn-sm">
+                  <i class='bx bx-plus'></i>
+                  添加
+                </button>
+              </div>
             </div>
-            <div>
-              <label class="block text-sm font-medium mb-2">主题色</label>
-              <input id="themeColor" type="color" value="#0ea5e9" class="w-full h-10 border border-slate-300 rounded-lg">
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-2">CTA按钮</label>
-              <div class="grid grid-cols-2 gap-2">
-                <input id="ctaLabel" type="text" class="px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="按钮文字">
-                <input id="ctaUrl" type="url" class="px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="链接地址">
+            <div class="card-content">
+              <div id="socialsList" class="section-group">
+                <!-- 动态添加的社交链接 -->
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- 数据统计 -->
-        <div class="glass rounded-xl p-6 border border-slate-200 dark:border-slate-700">
-          <h2 class="text-lg font-semibold mb-4">数据统计</h2>
-          <div class="text-center">
-            <div class="text-3xl font-bold text-sky-600" id="viewCount">0</div>
-            <div class="text-sm text-slate-500 mt-2">页面访问量</div>
-            <p class="text-xs text-slate-400 mt-2">统计从创建以来的总访问次数</p>
+          <div class="card">
+            <div class="card-header">
+              <div class="section-heading">
+                <div>
+                  <h2 class="card-title">产品 / 服务</h2>
+                  <p class="card-description">展示你打磨的核心产品或服务，附带跳转链接与分享文案。</p>
+                </div>
+                <button id="addProductBtn" class="btn btn-primary btn-sm">
+                  <i class='bx bx-plus'></i>
+                  添加
+                </button>
+              </div>
+            </div>
+            <div class="card-content">
+              <div id="productsList" class="section-group">
+                <!-- 动态添加的产品 -->
+              </div>
+            </div>
           </div>
-        </div>
+        </section>
+
+        <aside class="space-y-6 lg:space-y-8">
+          <div class="card">
+            <div class="card-header">
+              <div class="section-heading">
+                <div>
+                  <h2 class="card-title">实时预览</h2>
+                  <p class="card-description">保存后查看最新页面效果，确保内容呈现符合预期。</p>
+                </div>
+                <button id="refreshPreview" class="btn btn-ghost btn-sm">
+                  <i class='bx bx-refresh'></i>
+                  刷新
+                </button>
+              </div>
+            </div>
+            <div class="card-content">
+              <div class="tablet-shell">
+                <div class="preview-shell">
+                  <iframe id="previewFrame" src="/profile.html?handle=preview" class="h-[560px] w-full border-0"></iframe>
+                </div>
+              </div>
+            </div>
+            <div class="card-footer">
+              <div class="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+                <span class="flex items-center gap-2"><i class='bx bx-mobile text-base'></i> 访客将看到与此一致的视觉效果</span>
+                <button id="previewBtnMobile" class="btn btn-outline btn-sm sm:hidden">
+                  即刻预览
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">页面设置</h2>
+              <p class="card-description">个性化页面地址、主题色与主要动作按钮，一键搞定基础配置。</p>
+            </div>
+            <div class="card-content space-y-5">
+              <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+                <div class="space-y-2">
+                  <label for="profileHandle">页面标识</label>
+                  <input id="profileHandle" type="text" class="input" placeholder="your-handle" maxlength="30">
+                  <p class="text-xs text-muted-foreground">页面 URL：<span id="handleDomain" class="font-medium text-foreground"></span>/<strong id="handlePreview">your-handle</strong></p>
+                </div>
+                <button id="copyProfileLink" class="btn btn-outline btn-sm w-full sm:w-auto">
+                  <i class='bx bx-link-alt'></i>
+                  复制链接
+                </button>
+              </div>
+
+              <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label for="themeColor">主题色</label>
+                  <input id="themeColor" type="color" value="#0ea5e9" class="input h-12">
+                </div>
+                <div class="grid gap-2">
+                  <label for="ctaLabel">CTA 按钮</label>
+                  <input id="ctaLabel" type="text" class="input" placeholder="按钮文字">
+                  <input id="ctaUrl" type="url" class="input" placeholder="https://example.com/action">
+                </div>
+              </div>
+            </div>
+            <div class="card-footer text-sm text-muted-foreground">
+              <span class="flex items-center gap-2"><i class='bx bx-info-circle'></i> 标识修改后请重新发布以确保链接可用。</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">数据统计</h2>
+              <p class="card-description">掌握页面热度，及时跟进潜在访客。</p>
+            </div>
+            <div class="card-content">
+              <div class="grid gap-3 text-center">
+                <div class="text-4xl font-semibold text-sky-600" id="viewCount">0</div>
+                <p class="text-sm text-muted-foreground">页面访问量</p>
+                <p class="text-xs text-muted-foreground">统计自页面创建以来的总访问次数。</p>
+              </div>
+            </div>
+          </div>
+        </aside>
       </div>
-    </div>
+    </main>
   </div>
 
-  <!-- 社交链接编辑模态框 -->
-  <dialog id="socialModal" class="rounded-2xl p-0 border border-slate-200 dark:border-slate-700 w-96">
-    <div class="p-6">
-      <h3 id="socialModalTitle" class="text-lg font-semibold mb-4">添加联系方式</h3>
-      <div class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium mb-2">平台</label>
-          <select id="socialPlatform" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent">
-            <option value="WeChat">微信</option>
-            <option value="WeChatOfficial">微信公众号</option>
-            <option value="Weibo">微博</option>
-            <option value="LinkedIn">LinkedIn</option>
-            <option value="Twitter">Twitter</option>
-            <option value="Email">邮箱</option>
-            <option value="Phone">电话</option>
-            <option value="QQ">QQ</option>
-            <option value="Custom">自定义</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-2">显示名称</label>
-          <input id="socialLabel" type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="个人微信">
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-2">链接地址</label>
-          <input id="socialUrl" type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="https://... 或 mailto:...">
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-2">二维码图片</label>
-          <div class="space-y-2">
-            <input id="socialQr" type="url" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="https://example.com/qr.jpg" readonly>
-            <div id="qrUploadContainer"></div>
-            <div id="qrPreviewContainer" class="hidden mt-2">
-              <img id="qrPreview" src="" alt="二维码预览" class="w-32 h-32 border border-slate-300 rounded-lg">
-            </div>
-          </div>
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-2">二维码说明</label>
-          <input id="socialQrNote" type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="长按保存二维码">
+  <dialog id="socialModal">
+    <div class="dialog-header">
+      <h3 id="socialModalTitle" class="dialog-title">新增联系方式</h3>
+      <p class="dialog-description">为不同平台设置合适的展示名称与链接，支持二维码。</p>
+    </div>
+    <div class="dialog-body">
+      <div>
+        <label for="socialPlatform">平台</label>
+        <select id="socialPlatform" class="select">
+          <option value="WeChat">微信</option>
+          <option value="WeChatOfficial">微信公众号</option>
+          <option value="Weibo">微博</option>
+          <option value="LinkedIn">LinkedIn</option>
+          <option value="Twitter">Twitter</option>
+          <option value="Email">邮箱</option>
+          <option value="Phone">电话</option>
+          <option value="QQ">QQ</option>
+          <option value="Custom">自定义</option>
+        </select>
+      </div>
+      <div>
+        <label for="socialLabel">显示名称</label>
+        <input id="socialLabel" type="text" class="input" placeholder="个人微信">
+      </div>
+      <div>
+        <label for="socialUrl">链接地址</label>
+        <input id="socialUrl" type="text" class="input" placeholder="https://... 或 mailto:...">
+      </div>
+      <div class="space-y-2">
+        <label for="socialQr">二维码图片</label>
+        <input id="socialQr" type="url" class="input" placeholder="https://example.com/qr.jpg" readonly>
+        <div id="qrUploadContainer"></div>
+        <div id="qrPreviewContainer" class="hidden">
+          <img id="qrPreview" src="" alt="二维码预览" class="h-32 w-32 rounded-lg border border-border object-cover">
         </div>
       </div>
+      <div>
+        <label for="socialQrNote">二维码说明</label>
+        <input id="socialQrNote" type="text" class="input" placeholder="长按保存二维码">
+      </div>
     </div>
-    <div class="p-4 border-t border-slate-200 dark:border-slate-700 flex justify-end space-x-2">
-      <button id="cancelSocial" class="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50">取消</button>
-      <button id="saveSocial" class="px-4 py-2 text-sm bg-sky-600 text-white rounded-lg hover:bg-sky-500">保存</button>
+    <div class="dialog-footer">
+      <button id="cancelSocial" class="btn btn-ghost">取消</button>
+      <button id="saveSocial" class="btn btn-primary">保存</button>
     </div>
   </dialog>
 
-  <!-- 产品编辑模态框 -->
-  <dialog id="productModal" class="rounded-2xl p-0 border border-slate-200 dark:border-slate-700 w-96">
-    <div class="p-6">
-      <h3 id="productModalTitle" class="text-lg font-semibold mb-4">添加产品/服务</h3>
-      <div class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium mb-2">产品名称</label>
-          <input id="productName" type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="我的产品">
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-2">产品描述</label>
-          <textarea id="productDescription" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="产品功能介绍..."></textarea>
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-2">产品图片</label>
-          <div class="space-y-2">
-            <input id="productImage" type="url" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="https://example.com/product.jpg" readonly>
-            <div id="productImageUploadContainer"></div>
-            <div id="productImagePreviewContainer" class="hidden mt-2">
-              <img id="productImagePreview" src="" alt="产品图片预览" class="w-full h-48 object-cover border border-slate-300 rounded-lg">
-            </div>
-          </div>
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-2">产品链接</label>
-          <input id="productUrl" type="url" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="https://example.com/product">
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-2">分享文案</label>
-          <input id="productShareText" type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="推荐这个产品给大家！">
+  <dialog id="productModal">
+    <div class="dialog-header">
+      <h3 id="productModalTitle" class="dialog-title">新增产品 / 服务</h3>
+      <p class="dialog-description">写下产品亮点，可附带图片、链接与分享文案。</p>
+    </div>
+    <div class="dialog-body">
+      <div>
+        <label for="productName">产品名称</label>
+        <input id="productName" type="text" class="input" placeholder="我的产品">
+      </div>
+      <div>
+        <label for="productDescription">产品描述</label>
+        <textarea id="productDescription" rows="3" class="textarea" placeholder="产品核心价值、适用场景等..."></textarea>
+      </div>
+      <div class="space-y-2">
+        <label for="productImage">产品图片</label>
+        <input id="productImage" type="url" class="input" placeholder="https://example.com/product.jpg" readonly>
+        <div id="productImageUploadContainer"></div>
+        <div id="productImagePreviewContainer" class="hidden">
+          <img id="productImagePreview" src="" alt="产品图片预览" class="h-48 w-full rounded-lg border border-border object-cover">
         </div>
       </div>
+      <div>
+        <label for="productUrl">产品链接</label>
+        <input id="productUrl" type="url" class="input" placeholder="https://example.com/product">
+      </div>
+      <div>
+        <label for="productShareText">分享文案</label>
+        <input id="productShareText" type="text" class="input" placeholder="推荐这个产品给大家！">
+      </div>
     </div>
-    <div class="p-4 border-t border-slate-200 dark:border-slate-700 flex justify-end space-x-2">
-      <button id="cancelProduct" class="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50">取消</button>
-      <button id="saveProduct" class="px-4 py-2 text-sm bg-sky-600 text-white rounded-lg hover:bg-sky-500">保存</button>
+    <div class="dialog-footer">
+      <button id="cancelProduct" class="btn btn-ghost">取消</button>
+      <button id="saveProduct" class="btn btn-primary">保存</button>
     </div>
   </dialog>
 
-  <!-- App Config & Scripts -->
   <script src="/js/config.js"></script>
   <script src="/assets/vendor/supabase/supabase.js"></script>
   <script src="/js/auth-utils.js"></script>
