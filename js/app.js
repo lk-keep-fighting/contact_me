@@ -406,6 +406,64 @@ function buildPosterElement(template, profile, shareUrl) {
     body.appendChild(badgeWrap);
   }
 
+  const productItems = Array.isArray(profile.products)
+    ? profile.products.filter(product => product && product.name).slice(0, 3)
+    : [];
+  if (productItems.length) {
+    const productWrap = document.createElement('div');
+    productWrap.className = 'share-products';
+
+    const productsTitle = document.createElement('div');
+    productsTitle.className = 'share-products-title';
+    productsTitle.textContent = '主打产品';
+    productWrap.appendChild(productsTitle);
+
+    const list = document.createElement('div');
+    list.className = 'share-product-list';
+
+    productItems.forEach((product) => {
+      const item = document.createElement('div');
+      item.className = 'share-product-item';
+
+      const dot = document.createElement('span');
+      dot.className = 'share-product-dot';
+
+      const box = document.createElement('div');
+      box.className = 'share-product-copy';
+
+      const name = document.createElement('span');
+      name.className = 'share-product-name';
+      name.textContent = product.name;
+      box.appendChild(name);
+
+      const descriptionSource = product.tagline || product.description || product.shareText;
+      if (descriptionSource) {
+        const text = descriptionSource.toString().trim();
+        if (text) {
+          const desc = document.createElement('span');
+          desc.className = 'share-product-desc';
+          desc.textContent = truncateText(text, 72);
+          box.appendChild(desc);
+        }
+      }
+
+      if (typeof product.url === 'string' && product.url.trim()) {
+        const rawUrl = product.url.trim();
+        const url = document.createElement('span');
+        url.className = 'share-product-url';
+        url.textContent = formatShareUrl(rawUrl);
+        box.appendChild(url);
+      }
+
+      item.appendChild(dot);
+      item.appendChild(box);
+      list.appendChild(item);
+    });
+
+    productWrap.appendChild(list);
+    body.appendChild(productWrap);
+  }
+
   const highlight = document.createElement('div');
   highlight.className = 'share-highlight';
   highlight.style.background = hexToRgba(template.accent, 0.2);

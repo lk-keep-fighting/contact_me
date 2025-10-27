@@ -3,126 +3,390 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="theme-color" content="#0ea5e9">
-  <title>联系我 - 为创业者打造的个人介绍平台</title>
-  <meta name="description" content="一键创建个人介绍页面，支持产品展示、社交媒体引流、数据统计。帮助创业者高效推广自己和产品。">
+  <meta name="theme-color" content="#38bdf8">
+  <title>联系我 - 次世代个人品牌栈</title>
+  <meta name="description" content="联系我是为创业者与创作者打造的数字名片与产品展示栈，三分钟上线品牌主页，覆盖全渠道分享。">
   <link rel="icon" href="/favicon.svg">
   <script src="/assets/vendor/tailwindcss/tailwindcss.js"></script>
   <link rel="stylesheet" href="/assets/vendor/boxicons/css/boxicons.min.css">
   <link rel="stylesheet" href="/assets/vendor/inter/inter.css">
   <style>
-    :root { --accent: #0ea5e9; }
-    html, body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
-    .glass { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.7); }
-    .dark .glass { background: rgba(0, 0, 0, 0.35); }
-    .gradient-text { background: linear-gradient(135deg, #0ea5e9, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .hero-section { position: relative; overflow: hidden; }
-    .hero-section::before {
+    :root {
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.16);
+      --surface: rgba(15, 23, 42, 0.58);
+      --surface-strong: rgba(15, 23, 42, 0.84);
+      color-scheme: dark;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: #020617;
+      color: #e2e8f0;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+    body::before {
       content: '';
-      position: absolute;
+      position: fixed;
       inset: 0;
-      background: linear-gradient(135deg, rgba(14, 165, 233, 0.14), rgba(139, 92, 246, 0.12));
+      background: radial-gradient(circle at 20% -10%, rgba(56, 189, 248, 0.35), transparent 55%),
+                  radial-gradient(circle at 80% 10%, rgba(99, 102, 241, 0.28), transparent 50%),
+                  radial-gradient(circle at 50% 80%, rgba(14, 165, 233, 0.18), transparent 60%);
+      pointer-events: none;
       z-index: 0;
+      opacity: 0.9;
     }
-    .hero-section::after {
+    body::after {
       content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(circle at 20% 20%, rgba(244, 114, 182, 0.22), transparent 70%);
-      mix-blend-mode: screen;
-      animation: heroGlow 12s ease-in-out infinite;
+      position: fixed;
+      inset: -120px;
+      background-size: 72px 72px;
+      background-image:
+        linear-gradient(to right, rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+      mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.9), transparent 75%);
+      pointer-events: none;
       z-index: 0;
     }
-    .hero-blob {
-      position: absolute;
-      border-radius: 999px;
-      filter: blur(120px);
-      opacity: 0.5;
-      animation: float 16s ease-in-out infinite;
-      z-index: 0;
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: linear-gradient(180deg, rgba(2, 6, 23, 0.92), rgba(2, 6, 23, 0.7));
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
     }
-    .hero-blob-1 {
-      top: -140px;
-      left: -80px;
-      width: 360px;
-      height: 360px;
-      background: radial-gradient(circle, rgba(14, 165, 233, 0.6), transparent 65%);
+    nav .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 1.1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
-    .hero-blob-2 {
-      bottom: -160px;
-      right: -60px;
-      width: 420px;
-      height: 420px;
-      background: radial-gradient(circle, rgba(139, 92, 246, 0.55), transparent 70%);
-      animation-delay: 2.5s;
-    }
-    @keyframes float {
-      0%, 100% { transform: translateY(0px) scale(1); }
-      50% { transform: translateY(-28px) scale(1.05); }
-    }
-    @keyframes heroGlow {
-      0%, 100% { opacity: 0.6; }
-      50% { opacity: 0.9; }
-    }
-    .glow-button {
-      background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
-      box-shadow: 0 18px 34px rgba(14, 165, 233, 0.28);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    .glow-button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 26px 46px rgba(139, 92, 246, 0.35);
-    }
-    .secondary-button {
-      backdrop-filter: blur(10px);
-      background: rgba(255, 255, 255, 0.78);
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      color: #0f172a;
-      transition: transform 0.3s ease, border-color 0.3s ease, color 0.3s ease;
-    }
-    .secondary-button:hover {
-      transform: translateY(-2px);
-      border-color: rgba(14, 165, 233, 0.6);
-      color: #0369a1;
-    }
-    .floating-badge {
+    .brand {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #e0f2fe;
+      letter-spacing: 0.04em;
       display: inline-flex;
       align-items: center;
-      gap: 0.35rem;
-      padding: 0.45rem 0.95rem;
-      border-radius: 9999px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: #0f172a;
-      background: rgba(255, 255, 255, 0.75);
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      box-shadow: 0 15px 35px rgba(14, 165, 233, 0.16);
-      backdrop-filter: blur(10px);
+      gap: 0.4rem;
     }
-    .floating-badge i {
-      color: #0ea5e9;
+    .brand i {
+      color: var(--accent);
+      font-size: 1.3rem;
+    }
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+    }
+    .nav-actions a {
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      padding: 0.5rem 1rem;
+      border-radius: 999px;
+      transition: all 0.25s ease;
+      text-decoration: none;
+    }
+    .nav-actions a[href*="login"].ghost {
+      color: rgba(226, 232, 240, 0.78);
+      border: 1px solid rgba(148, 163, 184, 0.24);
+    }
+    .nav-actions a[href*="login"].ghost:hover {
+      border-color: rgba(148, 163, 184, 0.45);
+      color: #f8fafc;
+    }
+    .nav-actions a.primary {
+      background: linear-gradient(135deg, #38bdf8, #6366f1);
+      color: #0b1120;
+      box-shadow: 0 16px 36px rgba(79, 70, 229, 0.35);
+    }
+    .nav-actions a.primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 18px 48px rgba(79, 70, 229, 0.45);
+    }
+    main {
+      position: relative;
+      z-index: 1;
+    }
+    section {
+      position: relative;
+    }
+    .section-container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+    .hero {
+      padding: 6.5rem 0 4.5rem;
+    }
+    .hero-grid {
+      display: grid;
+      gap: 4rem;
+    }
+    @media (min-width: 1024px) {
+      .hero-grid {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+        align-items: center;
+      }
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.8rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      background: rgba(15, 23, 42, 0.55);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: rgba(226, 232, 240, 0.76);
+    }
+    .eyebrow i {
+      color: var(--accent);
       font-size: 1rem;
     }
-    .slogan-keyword {
+    .hero h1 {
+      font-size: clamp(2.4rem, 4vw, 3.6rem);
+      line-height: 1.1;
+      font-weight: 700;
+      margin: 1.5rem 0 1rem;
+      background: linear-gradient(135deg, #f8fafc, #38bdf8 45%, #a5b4fc 80%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p.lead {
+      font-size: clamp(1rem, 2.5vw, 1.15rem);
+      color: rgba(226, 232, 240, 0.72);
+      line-height: 1.7;
+      max-width: 580px;
+    }
+    .hero-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      margin-top: 2.2rem;
+    }
+    @media (min-width: 640px) {
+      .hero-actions {
+        flex-direction: row;
+      }
+    }
+    .hero-actions a {
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      padding: 0.9rem 1.6rem;
+      border-radius: 999px;
+      transition: transform 0.25s ease, box-shadow 0.3s ease, border-color 0.3s ease;
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      padding: 0.3rem 0.9rem;
-      border-radius: 9999px;
-      background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
-      color: #fff;
-      font-weight: 700;
-      margin: 0 0.25rem;
-      transform: translateY(12px);
-      opacity: 0;
-      transition: opacity 0.4s ease, transform 0.4s ease;
+      gap: 0.55rem;
     }
-    .slogan-keyword.is-visible {
-      opacity: 1;
-      transform: translateY(0);
+    .hero-actions a.primary {
+      background: linear-gradient(135deg, #38bdf8, #6366f1);
+      color: #0b1120;
+      box-shadow: 0 20px 45px rgba(79, 70, 229, 0.38);
+    }
+    .hero-actions a.primary:hover {
+      transform: translateY(-2px);
+    }
+    .hero-actions a.secondary {
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      color: rgba(224, 231, 255, 0.86);
+      background: rgba(15, 23, 42, 0.55);
+    }
+    .hero-actions a.secondary:hover {
+      border-color: rgba(148, 163, 184, 0.4);
+      color: #f8fafc;
+    }
+    .hero-highlights {
+      margin-top: 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+    .hero-highlights span {
+      padding: 0.4rem 0.85rem;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: rgba(15, 23, 42, 0.55);
+      font-size: 0.75rem;
+      color: rgba(224, 231, 255, 0.7);
+      letter-spacing: 0.04em;
+    }
+    .hero-panel {
+      position: relative;
+      padding: 2rem;
+      border-radius: 26px;
+      background: linear-gradient(160deg, rgba(15, 23, 42, 0.82), rgba(40, 54, 99, 0.52));
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      box-shadow: 0 30px 60px rgba(15, 23, 42, 0.38);
+      display: flex;
+      flex-direction: column;
+      gap: 1.4rem;
+      min-height: 440px;
+    }
+    .hero-panel::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(99, 102, 241, 0.18));
+      opacity: 0.4;
+      pointer-events: none;
+      border-radius: inherit;
+    }
+    .hero-panel > * {
+      position: relative;
+      z-index: 1;
+    }
+    .hero-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .hero-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.85rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      background: rgba(15, 23, 42, 0.68);
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      color: rgba(226, 232, 240, 0.62);
+    }
+    .hero-chip i {
+      color: var(--accent);
+      font-size: 0.95rem;
+    }
+    .hero-panel-avatar {
+      display: flex;
+      gap: 0.95rem;
+      align-items: center;
+    }
+    .hero-panel-avatar img {
+      width: 60px;
+      height: 60px;
+      border-radius: 18px;
+      object-fit: cover;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      background: rgba(15, 23, 42, 0.75);
+    }
+    .hero-panel-avatar h3 {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #f8fafc;
+    }
+    .hero-panel-avatar p {
+      margin: 0.25rem 0 0;
+      font-size: 0.75rem;
+      color: rgba(226, 232, 240, 0.65);
+      letter-spacing: 0.04em;
+    }
+    .hero-products {
+      display: grid;
+      gap: 0.9rem;
+    }
+    .product-row {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.75rem;
+      padding: 0.85rem;
+      border-radius: 18px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+    }
+    .product-row::before {
+      content: '\ea4c';
+      font-family: 'boxicons';
+      font-size: 1.2rem;
+      color: var(--accent);
+      margin-top: 0.15rem;
+    }
+    .product-row strong {
+      font-size: 0.95rem;
+      color: #f1f5f9;
+      display: block;
+      letter-spacing: 0.02em;
+    }
+    .product-row span {
+      font-size: 0.75rem;
+      color: rgba(226, 232, 240, 0.6);
+      line-height: 1.5;
+    }
+    .hero-panel-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid rgba(148, 163, 184, 0.16);
+      padding-top: 1rem;
+      margin-top: auto;
+      font-size: 0.75rem;
+      color: rgba(226, 232, 240, 0.55);
+    }
+    .hero-panel-footer span {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .hero-panel-footer i {
+      color: var(--accent);
+      font-size: 1rem;
+    }
+    .section-heading {
+      display: grid;
+      gap: 0.8rem;
+      max-width: 620px;
+    }
+    .section-heading h2 {
+      margin: 0;
+      font-size: clamp(1.8rem, 3vw, 2.4rem);
+      font-weight: 600;
+      color: #f8fafc;
+    }
+    .section-heading p {
+      margin: 0;
+      color: rgba(226, 232, 240, 0.65);
+      line-height: 1.7;
+      font-size: 0.95rem;
+    }
+    .feature-grid {
+      margin-top: 3rem;
+      display: grid;
+      gap: 1.5rem;
+    }
+    @media (min-width: 768px) {
+      .feature-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    @media (min-width: 1024px) {
+      .feature-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
     }
     .feature-card {
-      transition: transform 0.35s ease, box-shadow 0.35s ease;
+      padding: 1.5rem;
+      border-radius: 22px;
+      background: rgba(15, 23, 42, 0.58);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      display: grid;
+      gap: 0.75rem;
+      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
       position: relative;
       overflow: hidden;
     }
@@ -130,389 +394,303 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: radial-gradient(circle at top right, rgba(14, 165, 233, 0.18), transparent 65%);
+      background: radial-gradient(circle at top center, rgba(56, 189, 248, 0.24), transparent 70%);
       opacity: 0;
-      transition: opacity 0.35s ease;
+      transition: opacity 0.3s ease;
     }
     .feature-card:hover {
-      transform: translateY(-12px);
-      box-shadow: 0 24px 48px rgba(15, 23, 42, 0.12);
+      transform: translateY(-6px);
+      border-color: rgba(56, 189, 248, 0.45);
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.38);
     }
     .feature-card:hover::after {
       opacity: 1;
     }
     .feature-icon {
-      width: 56px;
-      height: 56px;
-      border-radius: 18px;
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.75rem;
-      margin-bottom: 1.25rem;
-      transition: transform 0.3s ease;
+      background: rgba(56, 189, 248, 0.16);
+      color: #38bdf8;
+      font-size: 1.25rem;
     }
-    .feature-card:hover .feature-icon {
-      transform: translateY(-4px) scale(1.05);
+    .feature-card h3 {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #f8fafc;
+    }
+    .feature-card p {
+      margin: 0;
+      font-size: 0.85rem;
+      color: rgba(226, 232, 240, 0.6);
+      line-height: 1.6;
+    }
+    .preview {
+      padding: 5rem 0;
+    }
+    .preview-grid {
+      display: grid;
+      gap: 3rem;
+    }
+    @media (min-width: 1024px) {
+      .preview-grid {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 460px);
+        align-items: center;
+      }
+    }
+    .preview-notes {
+      display: grid;
+      gap: 2rem;
+    }
+    .preview-checklist {
+      display: grid;
+      gap: 1rem;
+    }
+    .preview-checklist span {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.85rem;
+      color: rgba(226, 232, 240, 0.68);
+    }
+    .preview-checklist i {
+      color: #34d399;
+      font-size: 1.1rem;
+    }
+    .preview-window {
+      position: relative;
+      padding: 1.2rem;
+      border-radius: 26px;
+      background: rgba(15, 23, 42, 0.72);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      box-shadow: 0 28px 60px rgba(15, 23, 42, 0.4);
+      overflow: hidden;
+    }
+    .preview-window::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 20% 10%, rgba(56, 189, 248, 0.2), transparent 55%);
+      pointer-events: none;
+    }
+    .preview-window iframe {
+      width: 100%;
+      height: 520px;
+      border-radius: 18px;
+      border: 0;
+      background: #0f172a;
+    }
+    .cta {
+      padding: 5rem 0 6rem;
+    }
+    .cta-card {
+      position: relative;
+      border-radius: 32px;
+      padding: clamp(2.5rem, 5vw, 3.8rem);
+      background: linear-gradient(135deg, rgba(30, 64, 175, 0.8), rgba(14, 165, 233, 0.78));
+      box-shadow: 0 35px 70px rgba(14, 165, 233, 0.32);
+      text-align: center;
+      overflow: hidden;
+    }
+    .cta-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.35), transparent 65%);
+      pointer-events: none;
+    }
+    .cta-card h2 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 2.6rem);
+      font-weight: 700;
+      color: #0b1120;
+    }
+    .cta-card p {
+      margin: 1rem auto 2.2rem;
+      max-width: 560px;
+      color: rgba(15, 23, 42, 0.75);
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+    .cta-card a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.95rem 2.2rem;
+      border-radius: 999px;
+      background: #0f172a;
+      color: #f8fafc;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-decoration: none;
+      box-shadow: 0 16px 32px rgba(15, 23, 42, 0.35);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .cta-card a:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 22px 42px rgba(15, 23, 42, 0.45);
+    }
+    footer {
+      padding: 2.5rem 0 3rem;
+      border-top: 1px solid rgba(148, 163, 184, 0.12);
+      background: rgba(2, 6, 23, 0.88);
+      text-align: center;
+      color: rgba(148, 163, 184, 0.55);
+      font-size: 0.75rem;
+      letter-spacing: 0.04em;
+    }
+    footer a {
+      color: rgba(226, 232, 240, 0.8);
+      text-decoration: none;
+    }
+    footer a:hover {
+      color: #f8fafc;
     }
   </style>
 </head>
-<body class="bg-gradient-to-b from-sky-50 to-white text-slate-800 min-h-screen">
-  <!-- 导航栏 -->
-  <nav class="glass border-b border-slate-200 sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center h-16">
-        <div class="flex items-center">
-          <a href="/home.html" class="text-xl font-bold text-sky-600">联系我</a>
-        </div>
-        <div class="flex items-center space-x-4">
-          <a href="/login.html" class="px-4 py-2 text-sm text-slate-600 hover:text-sky-600 transition">
-            登录
-          </a>
-          <a href="/login.html" class="px-4 py-2 text-sm bg-sky-600 text-white rounded-lg hover:bg-sky-500 transition">
-            注册
-          </a>
-        </div>
+<body>
+  <nav>
+    <div class="container">
+      <a href="/home.html" class="brand">
+        <i class='bx bx-cube-alt'></i>
+        联系我 · LINK YOUR VALUE
+      </a>
+      <div class="nav-actions">
+        <a href="/login.html" class="ghost">登录</a>
+        <a href="/login.html" class="primary">立即使用</a>
       </div>
     </div>
   </nav>
 
-  <!-- 主要内容 -->
   <main>
-    <!-- Hero 区域 -->
-    <section class="relative pt-20 pb-20 px-4 hero-section">
-      <div class="hero-blob hero-blob-1"></div>
-      <div class="hero-blob hero-blob-2"></div>
-      <div class="max-w-5xl mx-auto text-center relative z-10">
-        <div class="floating-badge mb-6 mx-auto">
-          <i class='bx bx-bolt'></i>
-          <span>一键生成 · 多渠道分享 · 实时追踪</span>
-        </div>
-        <h1 class="text-5xl md:text-6xl font-bold leading-tight text-slate-800 mb-6">
-          <span class="gradient-text">联系我</span>
-          <span class="block text-3xl md:text-4xl mt-4 text-slate-800/80">个人创业与副业的全能推广工具</span>
-        </h1>
-        <p class="text-lg md:text-xl text-slate-600/90 mb-6 max-w-3xl mx-auto leading-relaxed">
-          一分钟搭建数字名片，整合你的产品、服务、社交入口与行动号召。生成海报与二维码后，随时随地分享到任何平台。
-        </p>
-        <p class="text-base md:text-lg text-slate-500/90 mb-8">
-          <span>「</span>
-          <span id="sloganKeyword" class="slogan-keyword is-visible">3秒上线数字名片</span>
-          <span>」让客户一眼锁定你的产品价值。</span>
-        </p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <a href="/login.html" class="px-8 py-4 text-white rounded-xl font-semibold glow-button">
-            <i class='bx bx-rocket align-[-2px]'></i> 立即开始
-          </a>
-          <a href="#demo" class="px-8 py-4 rounded-xl font-semibold secondary-button">
-            <i class='bx bx-show align-[-2px]'></i> 查看演示
-          </a>
-        </div>
-        <div class="mt-10 flex flex-wrap justify-center gap-3">
-          <span class="floating-badge"><i class='bx bx-image-alt'></i> 信息海报模板多样</span>
-          <span class="floating-badge"><i class='bx bx-qr'></i> 二维码分享一键生成</span>
-          <span class="floating-badge"><i class='bx bx-analytics'></i> 分享数据实时回传</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- 功能特色 -->
-    <section class="py-16 px-4">
-      <div class="max-w-6xl mx-auto">
-        <h2 class="text-3xl font-bold text-center mb-12">为什么选择我们？</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <!-- 功能卡片 -->
-          <div class="feature-card glass rounded-2xl p-8 border border-slate-200 hover:border-sky-300 transition">
-            <div class="feature-icon bg-sky-100 text-sky-600">
-              <i class='bx bx-bolt'></i>
-            </div>
-            <h3 class="text-xl font-semibold mb-3">一键创建</h3>
-            <p class="text-slate-600">无需编程，拖拽式编辑器，几分钟就能创建专业的个人介绍页面</p>
+    <section class="hero">
+      <div class="section-container hero-grid">
+        <div>
+          <span class="eyebrow"><i class='bx bx-bulb'></i> Personal Launchpad</span>
+          <h1>把你的产品、服务和内容，装进一张可以随处分享的链接</h1>
+          <p class="lead">联系我是面向创业者与创作者的个人品牌操作系统。三分钟内上线数字名片，统一呈现产品矩阵、社交账号与行动号召，让用户在任意渠道一眼读懂你的价值。</p>
+          <div class="hero-actions">
+            <a href="/login.html" class="primary"><i class='bx bx-rocket'></i> 创建我的主页</a>
+            <a href="#preview" class="secondary"><i class='bx bx-play-circle'></i> 查看实时演示</a>
           </div>
-
-          <div class="feature-card glass rounded-2xl p-8 border border-slate-200 hover:border-sky-300 transition">
-            <div class="feature-icon bg-green-100 text-green-600">
-              <i class='bx bx-share-alt'></i>
-            </div>
-            <h3 class="text-xl font-semibold mb-3">一键分享</h3>
-            <p class="text-slate-600">支持微信、微博、LinkedIn等平台，二维码生成，轻松引流获客</p>
-          </div>
-
-          <div class="feature-card glass rounded-2xl p-8 border border-slate-200 hover:border-sky-300 transition">
-            <div class="feature-icon bg-purple-100 text-purple-600">
-              <i class='bx bx-bar-chart'></i>
-            </div>
-            <h3 class="text-xl font-semibold mb-3">数据统计</h3>
-            <p class="text-slate-600">实时访问统计，分享效果分析，帮你优化推广策略</p>
-          </div>
-
-          <div class="feature-card glass rounded-2xl p-8 border border-slate-200 hover:border-sky-300 transition">
-            <div class="feature-icon bg-orange-100 text-orange-600">
-              <i class='bx bx-mobile'></i>
-            </div>
-            <h3 class="text-xl font-semibold mb-3">响应式设计</h3>
-            <p class="text-slate-600">完美适配手机、平板、电脑，任何设备都有最佳体验</p>
-          </div>
-
-          <div class="feature-card glass rounded-2xl p-8 border border-slate-200 hover:border-sky-300 transition">
-            <div class="feature-icon bg-rose-100 text-rose-500">
-              <i class='bx bx-palette'></i>
-            </div>
-            <h3 class="text-xl font-semibold mb-3">个性化定制</h3>
-            <p class="text-slate-600">多种模板，自定义主题色，打造独特的个人品牌形象</p>
-          </div>
-
-          <div class="feature-card glass rounded-2xl p-8 border border-slate-200 hover:border-sky-300 transition">
-            <div class="feature-icon bg-indigo-100 text-indigo-600">
-              <i class='bx bx-shield'></i>
-            </div>
-            <h3 class="text-xl font-semibold mb-3">安全可靠</h3>
-            <p class="text-slate-600">企业级安全防护，数据加密存储，保护你的隐私安全</p>
+          <div class="hero-highlights">
+            <span>极速搭建 · 无需代码</span>
+            <span>多平台分享 · 海报&二维码</span>
+            <span>实时洞察 · 分享转化追踪</span>
           </div>
         </div>
-      </div>
-    </section>
-
-    <!-- 演示区域 -->
-    <section id="demo" class="py-16 px-4 bg-slate-50">
-      <div class="max-w-6xl mx-auto">
-        <h2 class="text-3xl font-bold text-center mb-12">看看效果如何</h2>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <h3 class="text-2xl font-semibold mb-4">真实的个人介绍页面</h3>
-            <p class="text-slate-600 mb-6">
-              这就是你创建的个人介绍页面，包含个人信息、产品展示、联系方式等所有内容。
-              支持二维码、一键分享、数据统计等高级功能。
-            </p>
-            <div class="space-y-3">
-              <div class="flex items-center">
-                <i class='bx bx-check text-green-600 text-xl mr-3'></i>
-                <span>个人信息展示</span>
+        <aside class="hero-panel">
+          <div class="hero-panel-header">
+            <span class="hero-chip"><i class='bx bx-radio-circle-marked'></i> LIVE PREVIEW</span>
+            <span class="hero-chip" style="letter-spacing: 0.12em; text-transform: none;">扫码查看全页</span>
+          </div>
+          <div class="hero-panel-avatar">
+            <img src="/assets/images/default-avatar.svg" alt="低代码分享">
+            <div>
+              <h3>低代码分享</h3>
+              <p>产品顾问 · 独立创作者</p>
+            </div>
+          </div>
+          <div class="hero-products">
+            <div class="product-row">
+              <div></div>
+              <div>
+                <strong>联系我 · 数字名片</strong>
+                <span>组合你的产品与社交矩阵，一键生成链接与分享海报。</span>
               </div>
-              <div class="flex items-center">
-                <i class='bx bx-check text-green-600 text-xl mr-3'></i>
-                <span>产品/服务介绍</span>
+            </div>
+            <div class="product-row">
+              <div></div>
+              <div>
+                <strong>Logic-IDE 可视化编排</strong>
+                <span>以流程块定义业务逻辑，让交付团队即时上手。</span>
               </div>
-              <div class="flex items-center">
-                <i class='bx bx-check text-green-600 text-xl mr-3'></i>
-                <span>社交媒体链接</span>
-              </div>
-              <div class="flex items-center">
-                <i class='bx bx-check text-green-600 text-xl mr-3'></i>
-                <span>二维码分享</span>
+            </div>
+            <div class="product-row">
+              <div></div>
+              <div>
+                <strong>冷启动内容运营指南</strong>
+                <span>沉淀在微信、微博、B站的增长路径与转化清单。</span>
               </div>
             </div>
           </div>
-          <div class="bg-white rounded-2xl shadow-xl p-4">
-            <iframe src="/index.html?handle=demo" class="w-full h-96 border-0 rounded-lg"></iframe>
+          <div class="hero-panel-footer">
+            <span><i class='bx bx-refresh'></i> 自动同步个人主页数据</span>
+            <span>扫码立即体验 →</span>
           </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section-container" style="padding-bottom: 5rem;">
+      <div class="section-heading">
+        <h2>用更轻的方式，把产品组合讲清楚</h2>
+        <p>联系我内置模块化编辑器，从身份介绍到产品矩阵、社交引流和数据回传，都能在一个页面搞定。无论你在做副业还是发布重磅新品，都可以迅速将核心卖点推送到任何渠道。</p>
+      </div>
+      <div class="feature-grid">
+        <article class="feature-card">
+          <span class="feature-icon"><i class='bx bx-bolt'></i></span>
+          <h3>极速发布</h3>
+          <p>拖拽式设计器 + 即时预览，三分钟生成上线可用的数字名片。</p>
+        </article>
+        <article class="feature-card">
+          <span class="feature-icon"><i class='bx bx-grid-alt'></i></span>
+          <h3>矩阵展示</h3>
+          <p>产品、订阅、内容、联系人统一管理，支持自定义排序与主题。</p>
+        </article>
+        <article class="feature-card">
+          <span class="feature-icon"><i class='bx bx-share-alt'></i></span>
+          <h3>全链路分享</h3>
+          <p>一键生成二维码与海报，适配微博、微信、小红书等主流社媒。</p>
+        </article>
+        <article class="feature-card">
+          <span class="feature-icon"><i class='bx bx-line-chart'></i></span>
+          <h3>实时洞察</h3>
+          <p>访问路径、分享来源与点击行为即刻反馈，指导你的下一次投放。</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="preview" class="preview">
+      <div class="section-container preview-grid">
+        <div class="preview-notes">
+          <div class="section-heading">
+            <h2>真实页面预览 · 你看到的就是用户收到的</h2>
+            <p>无论是通过链接还是海报二维码，访问者都会进入同一个自适应页面。你可以在后台实时调整模块，前端立即同步更新。</p>
+          </div>
+          <div class="preview-checklist">
+            <span><i class='bx bx-check-circle'></i> 专注你的故事，排版和动效我们已经准备好</span>
+            <span><i class='bx bx-check-circle'></i> 支持亮色 / 暗色主题以及定制品牌色</span>
+            <span><i class='bx bx-check-circle'></i> 一次配置，多端呈现；无需重复设计</span>
+          </div>
+        </div>
+        <div class="preview-window">
+          <iframe src="/index.html?handle=demo" title="主页演示"></iframe>
         </div>
       </div>
     </section>
 
-    <!-- 使用场景 -->
-    <section class="py-16 px-4">
-      <div class="max-w-6xl mx-auto">
-        <h2 class="text-3xl font-bold text-center mb-12">适用场景</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div class="text-center p-6">
-            <div class="w-16 h-16 bg-sky-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <i class='bx bx-briefcase text-2xl text-sky-600'></i>
-            </div>
-            <h3 class="font-semibold mb-2">创业者</h3>
-            <p class="text-sm text-slate-600">展示创业项目，吸引投资人和合作伙伴</p>
-          </div>
-          <div class="text-center p-6">
-            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <i class='bx bx-user text-2xl text-green-600'></i>
-            </div>
-            <h3 class="font-semibold mb-2">自由职业者</h3>
-            <p class="text-sm text-slate-600">展示专业技能，获得更多客户机会</p>
-          </div>
-          <div class="text-center p-6">
-            <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <i class='bx bx-code-alt text-2xl text-purple-600'></i>
-            </div>
-            <h3 class="font-semibold mb-2">开发者</h3>
-            <p class="text-sm text-slate-600">展示技术项目，建立个人技术品牌</p>
-          </div>
-          <div class="text-center p-6">
-            <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <i class='bx bx-palette text-2xl text-orange-600'></i>
-            </div>
-            <h3 class="font-semibold mb-2">设计师</h3>
-            <p class="text-sm text-slate-600">展示设计作品，吸引潜在客户</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 价格方案 -->
-    <section class="py-16 px-4 bg-slate-50">
-      <div class="max-w-4xl mx-auto">
-        <h2 class="text-3xl font-bold text-center mb-12">简单透明的价格</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <!-- 免费版 -->
-          <div class="glass rounded-2xl p-8 border border-slate-200">
-            <h3 class="text-xl font-semibold mb-2">免费版</h3>
-            <div class="text-3xl font-bold mb-4">¥0<span class="text-sm text-slate-500">/月</span></div>
-            <ul class="space-y-3 mb-6">
-              <li class="flex items-center">
-                <i class='bx bx-check text-green-600 mr-2'></i>
-                <span class="text-sm">1个页面</span>
-              </li>
-              <li class="flex items-center">
-                <i class='bx bx-check text-green-600 mr-2'></i>
-                <span class="text-sm">基础模板</span>
-              </li>
-              <li class="flex items-center">
-                <i class='bx bx-check text-green-600 mr-2'></i>
-                <span class="text-sm">基础统计</span>
-              </li>
-            </ul>
-            <a href="/login.html" class="w-full block text-center px-4 py-2 border border-slate-300 rounded-lg hover:border-sky-400 transition">
-              免费开始
-            </a>
-          </div>
-
-          <!-- 专业版 -->
-          <div class="glass rounded-2xl p-8 border-2 border-sky-500 relative">
-            <div class="absolute -top-3 left-1/2 transform -translate-x-1/2">
-              <span class="bg-sky-500 text-white px-3 py-1 rounded-full text-sm">推荐</span>
-            </div>
-            <h3 class="text-xl font-semibold mb-2">专业版</h3>
-            <div class="text-3xl font-bold mb-4">¥9.9<span class="text-sm text-slate-500">/月</span></div>
-            <ul class="space-y-3 mb-6">
-              <li class="flex items-center">
-                <i class='bx bx-check text-green-600 mr-2'></i>
-                <span class="text-sm">5个页面</span>
-              </li>
-              <li class="flex items-center">
-                <i class='bx bx-check text-green-600 mr-2'></i>
-                <span class="text-sm">所有模板</span>
-              </li>
-              <li class="flex items-center">
-                <i class='bx bx-check text-green-600 mr-2'></i>
-                <span class="text-sm">详细统计</span>
-              </li>
-              <li class="flex items-center">
-                <i class='bx bx-check text-green-600 mr-2'></i>
-                <span class="text-sm">自定义域名</span>
-              </li>
-            </ul>
-            <a href="/login.html" class="w-full block text-center px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-500 transition">
-              选择专业版
-            </a>
-          </div>
-
-          <!-- 企业版 -->
-          <div class="glass rounded-2xl p-8 border border-slate-200">
-            <h3 class="text-xl font-semibold mb-2">企业版</h3>
-            <div class="text-3xl font-bold mb-4">¥29.9<span class="text-sm text-slate-500">/月</span></div>
-            <ul class="space-y-3 mb-6">
-              <li class="flex items-center">
-                <i class='bx bx-check text-green-600 mr-2'></i>
-                <span class="text-sm">无限页面</span>
-              </li>
-              <li class="flex items-center">
-                <i class='bx bx-check text-green-600 mr-2'></i>
-                <span class="text-sm">团队协作</span>
-              </li>
-              <li class="flex items-center">
-                <i class='bx bx-check text-green-600 mr-2'></i>
-                <span class="text-sm">API访问</span>
-              </li>
-              <li class="flex items-center">
-                <i class='bx bx-check text-green-600 mr-2'></i>
-                <span class="text-sm">优先支持</span>
-              </li>
-            </ul>
-            <a href="/login.html" class="w-full block text-center px-4 py-2 border border-slate-300 rounded-lg hover:border-sky-400 transition">
-              联系销售
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- CTA 区域 -->
-    <section class="py-16 px-4">
-      <div class="max-w-4xl mx-auto text-center">
-        <h2 class="text-3xl font-bold mb-4">准备开始了吗？</h2>
-        <p class="text-xl text-slate-600 mb-8">
-          加入数千名创业者，用专业的个人介绍页面提升你的影响力
-        </p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <a href="/login.html" class="px-8 py-4 text-white rounded-xl font-semibold glow-button">
-            <i class='bx bx-rocket align-[-2px]'></i> 立即注册
-          </a>
-          <a href="/demo.html" class="px-8 py-4 rounded-xl font-semibold secondary-button">
-            <i class='bx bx-info-circle align-[-2px]'></i> 了解更多
-          </a>
+    <section class="cta">
+      <div class="section-container">
+        <div class="cta-card">
+          <h2>现在，就为你的品牌准备一张真正能转化的主页</h2>
+          <p>从个人介绍、产品组合到社交矩阵，一次配置即可覆盖所有传播渠道。加入数千位创业者与创作者，开启你的全渠道连接。</p>
+          <a href="/login.html"><i class='bx bx-meteor'></i> 免费创建 · 3 分钟上线</a>
         </div>
       </div>
     </section>
   </main>
 
-  <!-- 页脚 -->
-  <footer class="bg-slate-900 text-white py-12 px-4">
-    <div class="max-w-6xl mx-auto">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-        <div>
-          <h3 class="text-lg font-semibold mb-4">联系我</h3>
-          <p class="text-slate-400 text-sm">
-            为创业者打造的专业个人介绍平台，让每个人都能轻松展示自己。
-          </p>
-        </div>
-        <div>
-          <h4 class="font-semibold mb-4">产品</h4>
-          <ul class="space-y-2 text-sm text-slate-400">
-            <li><a href="#demo" class="hover:text-white transition">功能演示</a></li>
-            <li><a href="/demo.html" class="hover:text-white transition">使用指南</a></li>
-            <li><a href="/test-preview.html" class="hover:text-white transition">测试工具</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4 class="font-semibold mb-4">支持</h4>
-          <ul class="space-y-2 text-sm text-slate-400">
-            <li><a href="/SETUP-GUIDE.md" class="hover:text-white transition">设置指南</a></li>
-            <li><a href="/CONFIG-README.md" class="hover:text-white transition">配置说明</a></li>
-            <li><a href="/debug.html" class="hover:text-white transition">调试工具</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4 class="font-semibold mb-4">联系</h4>
-          <ul class="space-y-2 text-sm text-slate-400">
-            <li>邮箱: support@contactme.com</li>
-            <li>微信: ContactMeSaaS</li>
-            <li>QQ群: 123456789</li>
-          </ul>
-        </div>
-      </div>
-      <div class="border-t border-slate-800 mt-8 pt-8 text-center text-sm text-slate-400">
-        <p>&copy; 2024 联系我. 保留所有权利.</p>
-      </div>
+  <footer>
+    <div class="section-container" style="text-align: center;">
+      © 2024 联系我 Contact Me · All rights reserved.
     </div>
   </footer>
-
-  <script>
-    (function() {
-      const slogans = ['3秒上线数字名片', '二维码横扫全渠道', '数据反馈即时可见'];
-      const el = document.getElementById('sloganKeyword');
-      if (!el || slogans.length === 0) return;
-      let index = 0;
-      el.textContent = slogans[index];
-      el.classList.add('is-visible');
-      setInterval(() => {
-        el.classList.remove('is-visible');
-        setTimeout(() => {
-          index = (index + 1) % slogans.length;
-          el.textContent = slogans[index];
-          el.classList.add('is-visible');
-        }, 260);
-      }, 3200);
-    })();
-  </script>
 
   <script src="/js/config.js"></script>
 </body>
