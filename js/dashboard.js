@@ -11,6 +11,11 @@ let handleCheckTimeout = null; // 防抖计时器
 let autoSaveTimer = null;
 const AUTO_SAVE_DELAY = 800;
 let isSavingProfile = false;
+let previewRefreshTimer = null;
+let pendingPreviewHandle = null;
+let lastPreviewHandle = null;
+let lastPreviewTimestamp = 0;
+const PREVIEW_AUTO_REFRESH_DELAY = 900;
 
 // 初始化
 async function init() {
@@ -61,6 +66,58 @@ function setSaveStatus(state, message = '') {
       textEl.textContent = '保存失败';
     }
   }
+}
+
+function getCurrentHandleValue() {
+  const inputHandle = $('#profileHandle')?.value.trim();
+  if (inputHandle) return inputHandle;
+  if (currentProfile?.handle) return currentProfile.handle;
+  return 'preview';
+}
+
+function refreshPreviewFrame(handle, options = {}) {
+  const iframe = $('#previewFrame');
+  if (!iframe) return;
+  const { reason = 'manual', force = false } = options;
+  const effectiveHandle = handle || getCurrentHandleValue() || 'preview';
+  const now = Date.now();
+  const shouldThrottle = reason === 'auto' && !force && lastPreviewHandle === effectiveHandle && (now - lastPreviewTimestamp) < PREVIEW_AUTO_REFRESH_DELAY;
+  if (shouldThrottle) {
+    return;
+  }
+  lastPreviewHandle = effectiveHandle;
+  lastPreviewTimestamp = now;
+  const params = new URLSearchParams();
+  params.set('handle', effectiveHandle);
+  params.set('preview', 'true');
+  params.set('_', `${now}`);
+  iframe.src = `/profile.html?${params.toString()}`;
+}
+
+function schedulePreviewRefresh(handle, reason = 'auto') {
+  const targetHandle = handle || getCurrentHandleValue();
+  const collapsed = document.body.classList.contains('preview-collapsed');
+  if (collapsed && reason !== 'init') {
+    return;
+  }
+  if (reason !== 'auto') {
+    if (previewRefreshTimer) {
+      clearTimeout(previewRefreshTimer);
+      previewRefreshTimer = null;
+      pendingPreviewHandle = null;
+    }
+    refreshPreviewFrame(targetHandle, { reason, force: true });
+    return;
+  }
+  pendingPreviewHandle = targetHandle;
+  if (previewRefreshTimer) {
+    return;
+  }
+  previewRefreshTimer = setTimeout(() => {
+    refreshPreviewFrame(pendingPreviewHandle, { reason: 'auto' });
+    previewRefreshTimer = null;
+    pendingPreviewHandle = null;
+  }, PREVIEW_AUTO_REFRESH_DELAY);
 }
 
 function scheduleAutoSave(reason = 'auto') {
@@ -187,6 +244,7 @@ async function loadUserProfile() {
     loadProducts();
     loadAnalytics();
   }
+  schedulePreviewRefresh(getCurrentHandleValue(), 'init');
 }
 
 // 填充表单数据
@@ -557,6 +615,14 @@ function setupEventListeners() {
   $('#publishBtn').addEventListener('click', publishPage);
   $('#refreshPreview').addEventListener('click', refreshPreview);
   
+  const togglePreviewButtons = $all('[data-preview-toggle]');
+  if (togglePreviewButtons.length) {
+    togglePreviewButtons.forEach((btn) => {
+      btn.addEventListener('click', togglePreviewLayout);
+    });
+    setPreviewToggleButton(document.body.classList.contains('preview-collapsed'));
+  }
+  
   // 退出登录
   $('#logoutBtn').addEventListener('click', logout);
   
@@ -745,7 +811,7 @@ async function validateHandleInRealTime(handle) {
 async function saveProfile(options = {}) {
   if (!currentUser) return currentProfile;
   
-  const { reason = 'manual', skipStatus = false } = options;
+  const { reason = 'manual', skipStatus = false, skipPreviewRefresh = false } = options;
   if (isSavingProfile && reason === 'auto') {
     return currentProfile;
   }
@@ -796,6 +862,7 @@ async function saveProfile(options = {}) {
         console.error('更新资料失败:', error);
         throw error;
       }
+      currentProfile = { ...currentProfile, ...profileData };
     } else {
       const { data, error } = await supabase
         .from('profiles')
@@ -808,16 +875,24 @@ async function saveProfile(options = {}) {
         throw error;
       }
       
-      currentProfile = data;
+      currentProfile = { ...profileData, ...data };
     }
     
     $('#userName').textContent = profileData.name || '用户';
     const avatarUrl = profileData.avatar_url || '/assets/images/default-avatar.svg';
     $('#userAvatar').src = avatarUrl;
     $('#avatarPreview').src = avatarUrl;
+    const handlePreviewLabel = $('#handlePreview');
+    if (handlePreviewLabel) {
+      handlePreviewLabel.textContent = handle || 'your-handle';
+    }
     
     if (!skipStatus) {
       setSaveStatus('saved', reason === 'auto' ? '已自动保存' : '已保存');
+    }
+    
+    if (!skipPreviewRefresh) {
+      schedulePreviewRefresh(handle, reason);
     }
     
     return currentProfile;
@@ -873,6 +948,7 @@ async function saveSocial() {
   $('#socialModal').close();
   clearSocialForm();
   loadSocials();
+  schedulePreviewRefresh(getCurrentHandleValue(), 'manual');
 }
 
 // 保存产品（新增或更新）
@@ -916,6 +992,7 @@ async function saveProduct() {
   $('#productModal').close();
   clearProductForm();
   loadProducts();
+  schedulePreviewRefresh(getCurrentHandleValue(), 'manual');
 }
 
 // 获取图标类名
@@ -1033,6 +1110,40 @@ async function copyProfileLink() {
       alert('复制失败，请稍后再试');
     }
   }
+}
+
+function setPreviewToggleButton(collapsed) {
+  const buttons = $all('[data-preview-toggle]');
+  if (!buttons.length) return;
+  const icon = collapsed ? 'bx bx-show' : 'bx bx-layout';
+  const text = collapsed ? '恢复预览' : '聚焦编辑';
+  const aria = collapsed ? '恢复预览面板' : '隐藏预览，专注编辑';
+  buttons.forEach((btn) => {
+    const variant = btn.dataset.previewToggle;
+    if (variant === 'header') {
+      const compactText = collapsed ? '预览' : '聚焦';
+      btn.innerHTML = `<i class='${icon}'></i><span><span class="sm:hidden">${compactText}</span><span class="hidden sm:inline">${text}</span></span>`;
+    } else {
+      btn.innerHTML = `<i class='${icon}'></i><span>${text}</span>`;
+    }
+    btn.setAttribute('aria-pressed', collapsed ? 'true' : 'false');
+    btn.title = aria;
+    btn.setAttribute('aria-label', aria);
+  });
+}
+
+function togglePreviewLayout() {
+  const collapsed = document.body.classList.toggle('preview-collapsed');
+  setPreviewToggleButton(collapsed);
+  if (collapsed) {
+    if (previewRefreshTimer) {
+      clearTimeout(previewRefreshTimer);
+      previewRefreshTimer = null;
+      pendingPreviewHandle = null;
+    }
+    return;
+  }
+  schedulePreviewRefresh(getCurrentHandleValue(), 'manual');
 }
 
 // 清空表单
@@ -1156,16 +1267,13 @@ async function refreshPreview() {
   }
   
   try {
-    await saveProfile({ reason: 'manual' });
+    await saveProfile({ reason: 'manual', skipPreviewRefresh: true });
   } catch (error) {
     console.error('保存失败，无法刷新预览:', error);
     return;
   }
   
-  const iframe = $('#previewFrame');
-  if (iframe) {
-    iframe.src = `/profile.html?handle=${handle}&preview=true`;
-  }
+  refreshPreviewFrame(handle, { reason: 'manual', force: true });
 }
 
 // 编辑社交链接
@@ -1240,6 +1348,7 @@ async function deleteSocial(id) {
   }
   
   loadSocials();
+  schedulePreviewRefresh(getCurrentHandleValue(), 'manual');
 }
 
 // 编辑产品
@@ -1317,6 +1426,7 @@ async function deleteProduct(id) {
   }
   
   loadProducts();
+  schedulePreviewRefresh(getCurrentHandleValue(), 'manual');
 }
 
 // 退出登录

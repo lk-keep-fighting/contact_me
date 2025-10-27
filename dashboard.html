@@ -28,6 +28,13 @@
             <span class="status-dot"></span>
             <span data-text>已保存</span>
           </div>
+          <button data-preview-toggle="header" type="button" class="btn btn-ghost btn-sm">
+            <i class='bx bx-layout'></i>
+            <span>
+              <span class="sm:hidden">聚焦</span>
+              <span class="hidden sm:inline">聚焦编辑</span>
+            </span>
+          </button>
           <div class="hidden sm:flex items-center gap-2">
             <button id="previewBtn" class="btn btn-outline">
               <i class='bx bx-show'></i>
@@ -55,8 +62,8 @@
     </header>
 
     <main class="container flex-1 pb-16 pt-10">
-      <div class="grid gap-6 lg:grid-cols-[minmax(0,440px)_minmax(0,1fr)] lg:gap-8">
-        <section class="space-y-6 lg:space-y-8">
+      <div class="layout-grid grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.85fr)] xl:grid-cols-[minmax(0,1.55fr)_minmax(0,0.75fr)] 2xl:grid-cols-[minmax(0,1.85fr)_minmax(0,0.7fr)] lg:gap-8">
+        <section class="layout-editor space-y-6 lg:space-y-8">
           <div class="card">
             <div class="card-header">
               <div class="section-heading">
@@ -147,7 +154,7 @@
           </div>
         </section>
 
-        <aside class="space-y-6 lg:space-y-8">
+        <aside class="layout-aside space-y-6 lg:space-y-8">
           <div class="card">
             <div class="card-header">
               <div class="section-heading">
@@ -155,10 +162,16 @@
                   <h2 class="card-title">实时预览</h2>
                   <p class="card-description">保存后查看最新页面效果，确保内容呈现符合预期。</p>
                 </div>
-                <button id="refreshPreview" class="btn btn-ghost btn-sm">
-                  <i class='bx bx-refresh'></i>
-                  刷新
-                </button>
+                <div class="flex flex-wrap items-center justify-end gap-2">
+                  <button data-preview-toggle="card" type="button" class="btn btn-ghost btn-sm">
+                    <i class='bx bx-layout'></i>
+                    <span>聚焦编辑</span>
+                  </button>
+                  <button id="refreshPreview" type="button" class="btn btn-ghost btn-sm">
+                    <i class='bx bx-refresh'></i>
+                    刷新
+                  </button>
+                </div>
               </div>
             </div>
             <div class="card-content">
@@ -171,7 +184,7 @@
             <div class="card-footer">
               <div class="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
                 <span class="flex items-center gap-2"><i class='bx bx-mobile text-base'></i> 访客将看到与此一致的视觉效果</span>
-                <button id="previewBtnMobile" class="btn btn-outline btn-sm sm:hidden">
+                <button id="previewBtnMobile" type="button" class="btn btn-outline btn-sm sm:hidden">
                   即刻预览
                 </button>
               </div>
