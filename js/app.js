@@ -460,16 +460,133 @@ function buildPosterElement(template, profile, shareUrl) {
 }
 
 async function generatePosterQr(img, url, template) {
-  if (!window.QRCode || typeof window.QRCode.toDataURL !== 'function') {
+  if (!img) {
+    throw new Error('QR target missing');
+  }
+  if (!url) {
+    throw new Error('QR content missing');
+  }
+  if (!window.QRCode) {
     throw new Error('QRCode not available');
   }
-  img.src = await window.QRCode.toDataURL(url, {
-    margin: 1,
-    width: 280,
-    color: {
-      dark: template.qrDark || '#0f172a',
-      light: template.qrLight || '#ffffff'
+
+  const colors = {
+    dark: template.qrDark || '#0f172a',
+    light: template.qrLight || '#ffffff'
+  };
+
+  if (typeof window.QRCode.toDataURL === 'function') {
+    img.src = await window.QRCode.toDataURL(url, {
+      type: 'image/png',
+      margin: 1,
+      width: 280,
+      color: colors
+    });
+    return;
+  }
+
+  img.src = await generateQrDataUrlWithConstructor(url, colors);
+}
+
+async function generateQrDataUrlWithConstructor(content, colors) {
+  if (typeof window.QRCode !== 'function') {
+    throw new Error('QRCode renderer unavailable');
+  }
+  if (typeof document === 'undefined' || !document.body) {
+    throw new Error('Document not ready');
+  }
+
+  const container = document.createElement('div');
+  container.style.position = 'fixed';
+  container.style.left = '-9999px';
+  container.style.top = '-9999px';
+  container.style.width = '0';
+  container.style.height = '0';
+  container.style.opacity = '0';
+  container.style.pointerEvents = 'none';
+  container.style.overflow = 'hidden';
+  document.body.appendChild(container);
+
+  let instance;
+  try {
+    instance = new window.QRCode(container, {
+      text: content,
+      width: 280,
+      height: 280,
+      colorDark: colors.dark,
+      colorLight: colors.light,
+      correctLevel: window.QRCode.CorrectLevel?.H
+        ?? window.QRCode.CorrectLevel?.Q
+        ?? window.QRCode.CorrectLevel?.M
+        ?? window.QRCode.CorrectLevel?.L
+        ?? 1
+    });
+
+    return await waitForQrOutput(container);
+  } finally {
+    if (instance && typeof instance.clear === 'function') {
+      try {
+        instance.clear();
+      } catch {}
     }
+    if (container.parentNode) {
+      container.parentNode.removeChild(container);
+    }
+  }
+}
+
+function waitForQrOutput(container) {
+  return new Promise((resolve, reject) => {
+    let attempts = 0;
+    const maxAttempts = 60;
+    let settled = false;
+
+    const fail = (error) => {
+      if (settled) return;
+      settled = true;
+      reject(error instanceof Error ? error : new Error(String(error)));
+    };
+
+    const succeed = (value) => {
+      if (settled) return;
+      settled = true;
+      resolve(value);
+    };
+
+    const inspect = () => {
+      if (settled) return;
+
+      const canvas = container.querySelector('canvas');
+      if (canvas && typeof canvas.toDataURL === 'function') {
+        try {
+          succeed(canvas.toDataURL('image/png'));
+        } catch (error) {
+          fail(error);
+        }
+        return;
+      }
+
+      const image = container.querySelector('img');
+      if (image) {
+        const finalize = () => succeed(image.src);
+        if (image.complete && image.naturalWidth > 0) {
+          finalize();
+        } else {
+          image.addEventListener('load', finalize, { once: true });
+          image.addEventListener('error', () => fail(new Error('QR image failed to load')), { once: true });
+        }
+        return;
+      }
+
+      attempts += 1;
+      if (attempts >= maxAttempts) {
+        fail(new Error('QR code generation timed out'));
+        return;
+      }
+      requestAnimationFrame(inspect);
+    };
+
+    requestAnimationFrame(inspect);
   });
 }
 
