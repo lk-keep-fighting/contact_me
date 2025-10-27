@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "共享站标签上传",
+  "description": "在浏览器插件中选择多个标签页并生成共享站页面，上传到 Supabase 存储。",
+  "version": "0.1.0",
+  "permissions": [
+    "tabs",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://zmuaawzjscrexezgencu.supabase.co/*"
+  ],
+  "action": {
+    "default_title": "上传标签页到共享站",
+    "default_popup": "popup.html"
+  },
+  "icons": {
+    "16": "icon-16.png",
+    "32": "icon-32.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
+  }
+}
