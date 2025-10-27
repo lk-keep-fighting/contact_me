@@ -32,6 +32,11 @@
 - ✅ 分享效果分析
 - ✅ 实时数据展示
 
+### 6. 浏览器插件
+- ✅ 当前窗口标签页读取
+- ✅ 多选生成共享站 HTML
+- ✅ 一键上传 Supabase Storage 并复制链接
+
 ## 📁 项目结构
 
 ```
@@ -48,6 +53,7 @@ contact-me/
 │   ├── app.js             # 用户页面逻辑
 │   ├── dashboard.js       # 管理后台逻辑
 │   └── auth.js            # 认证逻辑
+├── browser-extension/     # 浏览器插件（标签页共享站上传）
 ├── saas-schema-fixed.sql  # SaaS数据库架构
 ├── SETUP-GUIDE.md         # 设置指南
 ├── CONFIG-README.md       # 配置说明

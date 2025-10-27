@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>标签页共享站上传</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="header">
+    <div>
+      <h1>标签页共享站</h1>
+      <p class="subtitle">选择需要分享的标签页，生成共享站 HTML 并上传。</p>
+    </div>
+    <button id="refreshBtn" class="icon-button" title="刷新标签列表" type="button">
+      <span>↻</span>
+    </button>
+  </header>
+
+  <section class="form-section">
+    <label class="field">
+      <span class="field-label">站点标题</span>
+      <input id="siteTitleInput" class="text-input" type="text" placeholder="例如：本周学习资料" maxlength="60">
+    </label>
+    <label class="field">
+      <span class="field-label">文件名 (Slug)</span>
+      <input id="slugInput" class="text-input" type="text" placeholder="例如：weekly-learning" maxlength="40">
+    </label>
+    <label class="field">
+      <span class="field-label">目标目录</span>
+      <input id="directoryInput" class="text-input" type="text" placeholder="例如：shared/2024/10" maxlength="120">
+      <span class="field-hint">留空将上传到默认 shared-tabs 目录，支持多级目录，自动会进行安全转换。</span>
+    </label>
+  </section>
+
+  <section class="controls">
+    <label class="select-all">
+      <input type="checkbox" id="selectAll">
+      <span>全选当前窗口标签页</span>
+    </label>
+    <span class="tab-counter" id="tabCounter">0 个标签页</span>
+  </section>
+
+  <section class="tabs">
+    <div id="tabList" class="tab-list" role="list"></div>
+  </section>
+
+  <footer class="footer">
+    <div id="status" class="status" role="status"></div>
+    <button id="uploadBtn" type="button" class="primary-btn">上传为共享站</button>
+  </footer>
+
+  <template id="tab-item-template">
+    <label class="tab-item">
+      <input type="checkbox" class="tab-checkbox">
+      <div class="tab-content">
+        <img class="tab-favicon" alt="图标">
+        <div class="tab-texts">
+          <span class="tab-title"></span>
+          <span class="tab-url"></span>
+        </div>
+      </div>
+    </label>
+  </template>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>
