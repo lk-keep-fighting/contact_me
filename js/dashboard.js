@@ -8,6 +8,14 @@ let supabase = null;
 let currentUser = null;
 let currentProfile = null;
 let handleCheckTimeout = null; // 防抖计时器
+let autoSaveTimer = null;
+const AUTO_SAVE_DELAY = 800;
+let isSavingProfile = false;
+let previewRefreshTimer = null;
+let pendingPreviewHandle = null;
+let lastPreviewHandle = null;
+let lastPreviewTimestamp = 0;
+const PREVIEW_AUTO_REFRESH_DELAY = 900;
 
 // 初始化
 async function init() {
@@ -27,9 +35,114 @@ async function init() {
   }
   
   currentUser = user;
+  updateHandleDomain();
   await loadUserProfile();
+  setSaveStatus('saved', '已保存');
   setupEventListeners();
   initImageUploaders();
+}
+
+function updateHandleDomain() {
+  const domainEl = $('#handleDomain');
+  if (domainEl) {
+    const host = window.location.host || 'contact-me.dev';
+    domainEl.textContent = host;
+  }
+}
+
+function setSaveStatus(state, message = '') {
+  const statusEl = $('#saveStatus');
+  if (!statusEl) return;
+  statusEl.dataset.state = state;
+  const textEl = statusEl.querySelector('[data-text]');
+  if (textEl) {
+    if (message) {
+      textEl.textContent = message;
+    } else if (state === 'saving') {
+      textEl.textContent = '保存中...';
+    } else if (state === 'saved') {
+      textEl.textContent = '已保存';
+    } else if (state === 'error') {
+      textEl.textContent = '保存失败';
+    }
+  }
+}
+
+function getCurrentHandleValue() {
+  const inputHandle = $('#profileHandle')?.value.trim();
+  if (inputHandle) return inputHandle;
+  if (currentProfile?.handle) return currentProfile.handle;
+  return 'preview';
+}
+
+function refreshPreviewFrame(handle, options = {}) {
+  const iframe = $('#previewFrame');
+  if (!iframe) return;
+  const { reason = 'manual', force = false } = options;
+  const effectiveHandle = handle || getCurrentHandleValue() || 'preview';
+  const now = Date.now();
+  const shouldThrottle = reason === 'auto' && !force && lastPreviewHandle === effectiveHandle && (now - lastPreviewTimestamp) < PREVIEW_AUTO_REFRESH_DELAY;
+  if (shouldThrottle) {
+    return;
+  }
+  lastPreviewHandle = effectiveHandle;
+  lastPreviewTimestamp = now;
+  const params = new URLSearchParams();
+  params.set('handle', effectiveHandle);
+  params.set('preview', 'true');
+  params.set('_', `${now}`);
+  iframe.src = `/profile.html?${params.toString()}`;
+}
+
+function schedulePreviewRefresh(handle, reason = 'auto') {
+  const targetHandle = handle || getCurrentHandleValue();
+  const collapsed = document.body.classList.contains('preview-collapsed');
+  if (collapsed && reason !== 'init') {
+    return;
+  }
+  if (reason !== 'auto') {
+    if (previewRefreshTimer) {
+      clearTimeout(previewRefreshTimer);
+      previewRefreshTimer = null;
+      pendingPreviewHandle = null;
+    }
+    refreshPreviewFrame(targetHandle, { reason, force: true });
+    return;
+  }
+  pendingPreviewHandle = targetHandle;
+  if (previewRefreshTimer) {
+    return;
+  }
+  previewRefreshTimer = setTimeout(() => {
+    refreshPreviewFrame(pendingPreviewHandle, { reason: 'auto' });
+    previewRefreshTimer = null;
+    pendingPreviewHandle = null;
+  }, PREVIEW_AUTO_REFRESH_DELAY);
+}
+
+function scheduleAutoSave(reason = 'auto') {
+  if (autoSaveTimer) {
+    clearTimeout(autoSaveTimer);
+  }
+  autoSaveTimer = setTimeout(() => {
+    runAutoSave(reason);
+  }, AUTO_SAVE_DELAY);
+}
+
+async function runAutoSave(reason = 'auto') {
+  if (autoSaveTimer) {
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = null;
+  }
+  if (isSavingProfile) {
+    scheduleAutoSave(reason);
+    return;
+  }
+  try {
+    await saveProfile({ reason });
+  } catch (error) {
+    console.error('自动保存失败:', error);
+  }
 }
 
 // 确保用户资料存在
@@ -131,6 +244,7 @@ async function loadUserProfile() {
     loadProducts();
     loadAnalytics();
   }
+  schedulePreviewRefresh(getCurrentHandleValue(), 'init');
 }
 
 // 填充表单数据
@@ -163,6 +277,13 @@ function populateForm(profile) {
   }
 }
 
+function escapeHtml(value = '') {
+  return `${value ?? ''}`.replace(/[&<>"']/g, (char) => {
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return map[char] || char;
+  });
+}
+
 // 加载社交链接
 async function loadSocials() {
   if (!currentProfile) return;
@@ -177,7 +298,17 @@ async function loadSocials() {
   const container = $('#socialsList');
   container.innerHTML = '';
   
-  socials?.forEach(social => {
+  if (!socials || socials.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <strong>还没有联系方式</strong>
+        <p>点击“添加”按钮，快速创建常用联系渠道。</p>
+      </div>
+    `;
+    return;
+  }
+  
+  socials.forEach((social) => {
     const item = createSocialItem(social);
     container.appendChild(item);
   });
@@ -185,26 +316,61 @@ async function loadSocials() {
 
 // 创建社交链接项
 function createSocialItem(social) {
-  const div = document.createElement('div');
-  div.className = 'flex items-center justify-between p-3 border border-slate-200 rounded-lg';
-  div.innerHTML = `
-    <div class="flex items-center space-x-3">
-      <i class='bx ${social.icon_class || 'bx-link'} text-lg'></i>
-      <div>
-        <div class="font-medium">${social.label || social.platform}</div>
-        <div class="text-sm text-slate-500">${social.url || '二维码'}</div>
-      </div>
-    </div>
-    <div class="flex items-center space-x-2">
-      <button class="p-1 text-slate-400 hover:text-slate-600" onclick="editSocial('${social.id}')">
-        <i class='bx bx-edit'></i>
-      </button>
-      <button class="p-1 text-red-400 hover:text-red-600" onclick="deleteSocial('${social.id}')">
-        <i class='bx bx-trash'></i>
-      </button>
-    </div>
-  `;
-  return div;
+  const row = document.createElement('div');
+  row.className = 'item-row flex-col gap-3 sm:flex-row sm:items-start';
+  
+  const meta = document.createElement('div');
+  meta.className = 'item-meta flex-1';
+  
+  const iconBox = document.createElement('div');
+  iconBox.className = 'icon';
+  const icon = document.createElement('i');
+  icon.className = `bx ${social.icon_class || 'bx-link'}`;
+  iconBox.appendChild(icon);
+  
+  const content = document.createElement('div');
+  const title = document.createElement('div');
+  title.className = 'title';
+  title.textContent = social.label || social.platform || '未命名渠道';
+  content.appendChild(title);
+  
+  if (social.url) {
+    const link = document.createElement('div');
+    link.className = 'description';
+    link.textContent = social.url;
+    content.appendChild(link);
+  }
+  
+  if (social.qr_note) {
+    const note = document.createElement('div');
+    note.className = 'description';
+    note.textContent = social.qr_note;
+    content.appendChild(note);
+  }
+  
+  meta.appendChild(iconBox);
+  meta.appendChild(content);
+  
+  const actions = document.createElement('div');
+  actions.className = 'item-actions sm:self-center';
+  
+  const editBtn = document.createElement('button');
+  editBtn.type = 'button';
+  editBtn.innerHTML = "<i class='bx bx-edit'></i>";
+  editBtn.addEventListener('click', () => editSocial(social.id));
+  actions.appendChild(editBtn);
+  
+  const deleteBtn = document.createElement('button');
+  deleteBtn.type = 'button';
+  deleteBtn.classList.add('danger');
+  deleteBtn.innerHTML = "<i class='bx bx-trash'></i>";
+  deleteBtn.addEventListener('click', () => deleteSocial(social.id));
+  actions.appendChild(deleteBtn);
+  
+  row.appendChild(meta);
+  row.appendChild(actions);
+  
+  return row;
 }
 
 // 加载产品
@@ -221,7 +387,17 @@ async function loadProducts() {
   const container = $('#productsList');
   container.innerHTML = '';
   
-  products?.forEach(product => {
+  if (!products || products.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <strong>还没有产品内容</strong>
+        <p>添加产品或服务，向访客展示你的核心价值。</p>
+      </div>
+    `;
+    return;
+  }
+  
+  products.forEach((product) => {
     const item = createProductItem(product);
     container.appendChild(item);
   });
@@ -229,26 +405,71 @@ async function loadProducts() {
 
 // 创建产品项
 function createProductItem(product) {
-  const div = document.createElement('div');
-  div.className = 'border border-slate-200 rounded-lg p-4';
-  div.innerHTML = `
-    <div class="flex items-start justify-between">
-      <div class="flex-1">
-        <h3 class="font-semibold">${product.name}</h3>
-        <p class="text-sm text-slate-600 mt-1">${product.description || ''}</p>
-        ${product.url ? `<a href="${product.url}" target="_blank" class="text-sm text-sky-600 hover:underline">查看产品</a>` : ''}
-      </div>
-      <div class="flex items-center space-x-2 ml-4">
-        <button class="p-1 text-slate-400 hover:text-slate-600" onclick="editProduct('${product.id}')">
-          <i class='bx bx-edit'></i>
-        </button>
-        <button class="p-1 text-red-400 hover:text-red-600" onclick="deleteProduct('${product.id}')">
-          <i class='bx bx-trash'></i>
-        </button>
-      </div>
-    </div>
-  `;
-  return div;
+  const row = document.createElement('div');
+  row.className = 'item-row flex-col gap-3 sm:flex-row sm:items-start';
+  
+  const meta = document.createElement('div');
+  meta.className = 'item-meta flex-1';
+  
+  const iconBox = document.createElement('div');
+  iconBox.className = 'icon';
+  const icon = document.createElement('i');
+  icon.className = 'bx bx-package';
+  iconBox.appendChild(icon);
+  
+  const content = document.createElement('div');
+  const title = document.createElement('div');
+  title.className = 'title';
+  title.textContent = product.name || '未命名产品';
+  content.appendChild(title);
+  
+  if (product.description) {
+    const description = document.createElement('div');
+    description.className = 'description';
+    description.textContent = product.description;
+    content.appendChild(description);
+  }
+  
+  if (product.share_text) {
+    const share = document.createElement('div');
+    share.className = 'description';
+    share.textContent = `分享文案：${product.share_text}`;
+    content.appendChild(share);
+  }
+  
+  if (product.url) {
+    const link = document.createElement('a');
+    link.className = 'description text-sky-600 hover:underline';
+    link.href = product.url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = '查看产品';
+    content.appendChild(link);
+  }
+  
+  meta.appendChild(iconBox);
+  meta.appendChild(content);
+  
+  const actions = document.createElement('div');
+  actions.className = 'item-actions sm:self-center';
+  
+  const editBtn = document.createElement('button');
+  editBtn.type = 'button';
+  editBtn.innerHTML = "<i class='bx bx-edit'></i>";
+  editBtn.addEventListener('click', () => editProduct(product.id));
+  actions.appendChild(editBtn);
+  
+  const deleteBtn = document.createElement('button');
+  deleteBtn.type = 'button';
+  deleteBtn.classList.add('danger');
+  deleteBtn.innerHTML = "<i class='bx bx-trash'></i>";
+  deleteBtn.addEventListener('click', () => deleteProduct(product.id));
+  actions.appendChild(deleteBtn);
+  
+  row.appendChild(meta);
+  row.appendChild(actions);
+  
+  return row;
 }
 
 // 加载访问统计数据
@@ -284,50 +505,108 @@ async function loadAnalytics() {
 
 // 设置事件监听器
 function setupEventListeners() {
-  // 保存基本信息
-  $all('#profileName, #profileTitle, #profileBio, #profileTags, #profileAvatar, #themeColor, #ctaLabel, #ctaUrl').forEach(input => {
-    input.addEventListener('blur', saveProfile);
+  const autoSaveSelectors = '#profileName, #profileTitle, #profileBio, #profileTags, #profileAvatar, #themeColor, #ctaLabel, #ctaUrl';
+  $all(autoSaveSelectors).forEach((input) => {
+    const eventName = input.type === 'color' ? 'change' : 'input';
+    input.addEventListener(eventName, () => scheduleAutoSave('auto'));
+    input.addEventListener('blur', () => runAutoSave('manual'));
   });
   
   // 页面标识特殊处理
   const handleInput = $('#profileHandle');
-  handleInput.addEventListener('input', handleInputChange);
-  handleInput.addEventListener('blur', async () => {
-    const handle = handleInput.value.trim();
-    if (handle) {
-      await validateHandleInRealTime(handle);
-      // 只有在验证通过后才保存
-      try {
-        await saveProfile();
-      } catch (error) {
-        console.log('保存失败（handle验证问题）:', error.message);
+  if (handleInput) {
+    handleInput.addEventListener('input', handleInputChange);
+    handleInput.addEventListener('blur', async () => {
+      const handle = handleInput.value.trim();
+      if (handle) {
+        const valid = await validateHandleInRealTime(handle);
+        if (valid) {
+          try {
+            await saveProfile({ reason: 'manual' });
+          } catch (error) {
+            console.log('保存失败（handle验证问题）:', error.message);
+          }
+        }
       }
-    }
-  });
+    });
+  }
+  
+  const copyBtn = $('#copyProfileLink');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', copyProfileLink);
+  }
+  
+  const previewMobileBtn = $('#previewBtnMobile');
+  if (previewMobileBtn) {
+    previewMobileBtn.addEventListener('click', previewPage);
+  }
   
   // 添加社交链接
-  $('#addSocialBtn').addEventListener('click', () => {
-    const modal = $('#socialModal');
-    if (typeof modal.showModal === 'function') {
-      modal.showModal();
-    } else {
-      modal.style.display = 'block';
-    }
-  });
+  const addSocialBtn = $('#addSocialBtn');
+  if (addSocialBtn) {
+    addSocialBtn.addEventListener('click', () => {
+      clearSocialForm();
+      handleSocialPlatformChange();
+      const modal = $('#socialModal');
+      if (typeof modal.showModal === 'function') {
+        modal.showModal();
+      } else {
+        modal.style.display = 'block';
+      }
+    });
+  }
+  
+  const socialPlatform = $('#socialPlatform');
+  if (socialPlatform) {
+    socialPlatform.addEventListener('change', handleSocialPlatformChange);
+  }
+  const socialLabel = $('#socialLabel');
+  if (socialLabel) {
+    socialLabel.addEventListener('input', () => {
+      socialLabel.dataset.autofill = 'false';
+    });
+  }
   
   // 添加产品
-  $('#addProductBtn').addEventListener('click', () => {
-    const modal = $('#productModal');
-    if (typeof modal.showModal === 'function') {
-      modal.showModal();
-    } else {
-      modal.style.display = 'block';
-    }
-  });
+  const addProductBtn = $('#addProductBtn');
+  if (addProductBtn) {
+    addProductBtn.addEventListener('click', () => {
+      clearProductForm();
+      handleProductNameInput();
+      const modal = $('#productModal');
+      if (typeof modal.showModal === 'function') {
+        modal.showModal();
+      } else {
+        modal.style.display = 'block';
+      }
+    });
+  }
+  const productNameInput = $('#productName');
+  if (productNameInput) {
+    productNameInput.addEventListener('input', handleProductNameInput);
+  }
+  const productShareInput = $('#productShareText');
+  if (productShareInput) {
+    productShareInput.addEventListener('input', () => {
+      productShareInput.dataset.autofill = productShareInput.value.trim() ? 'false' : 'true';
+    });
+  }
   
   // 模态框事件
-  $('#cancelSocial').addEventListener('click', () => $('#socialModal').close());
-  $('#cancelProduct').addEventListener('click', () => $('#productModal').close());
+  const cancelSocialBtn = $('#cancelSocial');
+  if (cancelSocialBtn) {
+    cancelSocialBtn.addEventListener('click', () => {
+      clearSocialForm();
+      $('#socialModal').close();
+    });
+  }
+  const cancelProductBtn = $('#cancelProduct');
+  if (cancelProductBtn) {
+    cancelProductBtn.addEventListener('click', () => {
+      clearProductForm();
+      $('#productModal').close();
+    });
+  }
   $('#saveSocial').addEventListener('click', saveSocial);
   $('#saveProduct').addEventListener('click', saveProduct);
   
@@ -336,8 +615,19 @@ function setupEventListeners() {
   $('#publishBtn').addEventListener('click', publishPage);
   $('#refreshPreview').addEventListener('click', refreshPreview);
   
+  const togglePreviewButtons = $all('[data-preview-toggle]');
+  if (togglePreviewButtons.length) {
+    togglePreviewButtons.forEach((btn) => {
+      btn.addEventListener('click', togglePreviewLayout);
+    });
+    setPreviewToggleButton(document.body.classList.contains('preview-collapsed'));
+  }
+  
   // 退出登录
   $('#logoutBtn').addEventListener('click', logout);
+  
+  handleSocialPlatformChange();
+  handleProductNameInput();
 }
 
 // 生成唯一的默认handle
@@ -518,73 +808,102 @@ async function validateHandleInRealTime(handle) {
 }
 
 // 保存资料
-async function saveProfile() {
-  if (!currentUser) return;
+async function saveProfile(options = {}) {
+  if (!currentUser) return currentProfile;
   
-  const handle = $('#profileHandle').value.trim();
-  
-  // 验证handle
-  const validation = validateHandle(handle);
-  if (!validation.valid) {
-    showHandleValidation(false, validation.message);
-    throw new Error(validation.message);
+  const { reason = 'manual', skipStatus = false, skipPreviewRefresh = false } = options;
+  if (isSavingProfile && reason === 'auto') {
+    return currentProfile;
   }
   
-  // 检查handle唯一性
-  const exists = await checkHandleExists(handle);
-  if (exists) {
-    showHandleValidation(false, '该页面标识已被使用，请选择其他标识');
-    throw new Error('该页面标识已被使用');
+  const handleInput = $('#profileHandle');
+  const handle = handleInput ? handleInput.value.trim() : '';
+  
+  if (!skipStatus) {
+    setSaveStatus('saving', reason === 'auto' ? '自动保存中...' : '保存中...');
   }
   
-  const profileData = {
-    user_id: currentUser.id,
-    name: $('#profileName').value,
-    title: $('#profileTitle').value,
-    bio: $('#profileBio').value,
-    tags: $('#profileTags').value,
-    avatar_url: $('#profileAvatar').value,
-    handle: handle,
-    theme_color: $('#themeColor').value,
-    cta_label: $('#ctaLabel').value,
-    cta_url: $('#ctaUrl').value,
-    is_published: true
-  };
+  isSavingProfile = true;
   
-  if (currentProfile) {
-    // 更新现有资料
-    const { error } = await supabase
-      .from('profiles')
-      .update(profileData)
-      .eq('id', currentProfile.id);
-    
-    if (error) {
-      console.error('更新资料失败:', error);
-      throw error;
-    }
-  } else {
-    // 创建新资料
-    const { data, error } = await supabase
-      .from('profiles')
-      .insert(profileData)
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('创建资料失败:', error);
-      throw error;
+  try {
+    const validation = validateHandle(handle);
+    if (!validation.valid) {
+      showHandleValidation(false, validation.message);
+      throw new Error(validation.message);
     }
     
-    currentProfile = data;
+    const exists = await checkHandleExists(handle);
+    if (exists) {
+      showHandleValidation(false, '该页面标识已被使用，请选择其他标识');
+      throw new Error('该页面标识已被使用');
+    }
+    
+    const profileData = {
+      user_id: currentUser.id,
+      name: $('#profileName').value,
+      title: $('#profileTitle').value,
+      bio: $('#profileBio').value,
+      tags: $('#profileTags').value,
+      avatar_url: $('#profileAvatar').value,
+      handle,
+      theme_color: $('#themeColor').value,
+      cta_label: $('#ctaLabel').value,
+      cta_url: $('#ctaUrl').value,
+      is_published: true
+    };
+    
+    if (currentProfile) {
+      const { error } = await supabase
+        .from('profiles')
+        .update(profileData)
+        .eq('id', currentProfile.id);
+      
+      if (error) {
+        console.error('更新资料失败:', error);
+        throw error;
+      }
+      currentProfile = { ...currentProfile, ...profileData };
+    } else {
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert(profileData)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('创建资料失败:', error);
+        throw error;
+      }
+      
+      currentProfile = { ...profileData, ...data };
+    }
+    
+    $('#userName').textContent = profileData.name || '用户';
+    const avatarUrl = profileData.avatar_url || '/assets/images/default-avatar.svg';
+    $('#userAvatar').src = avatarUrl;
+    $('#avatarPreview').src = avatarUrl;
+    const handlePreviewLabel = $('#handlePreview');
+    if (handlePreviewLabel) {
+      handlePreviewLabel.textContent = handle || 'your-handle';
+    }
+    
+    if (!skipStatus) {
+      setSaveStatus('saved', reason === 'auto' ? '已自动保存' : '已保存');
+    }
+    
+    if (!skipPreviewRefresh) {
+      schedulePreviewRefresh(handle, reason);
+    }
+    
+    return currentProfile;
+  } catch (error) {
+    if (!skipStatus) {
+      setSaveStatus('error', error.message || '保存失败');
+    }
+    throw error;
+  } finally {
+    isSavingProfile = false;
   }
-  
-  // 更新用户信息显示
-  $('#userName').textContent = profileData.name || '用户';
-  const avatarUrl = profileData.avatar_url || '/assets/images/default-avatar.svg';
-  $('#userAvatar').src = avatarUrl;
-  $('#avatarPreview').src = avatarUrl;
-  
-  return currentProfile;
 }
 
 // 保存社交链接（新增或更新）
@@ -629,6 +948,7 @@ async function saveSocial() {
   $('#socialModal').close();
   clearSocialForm();
   loadSocials();
+  schedulePreviewRefresh(getCurrentHandleValue(), 'manual');
 }
 
 // 保存产品（新增或更新）
@@ -672,6 +992,7 @@ async function saveProduct() {
   $('#productModal').close();
   clearProductForm();
   loadProducts();
+  schedulePreviewRefresh(getCurrentHandleValue(), 'manual');
 }
 
 // 获取图标类名
@@ -690,66 +1011,234 @@ function getIconClass(platform) {
   return icons[platform] || 'bx-link';
 }
 
+function getDefaultSocialLabel(platform) {
+  const defaults = {
+    'WeChat': '微信',
+    'WeChatOfficial': '微信公众号',
+    'Weibo': '微博',
+    'LinkedIn': 'LinkedIn',
+    'Twitter': 'Twitter',
+    'Email': '工作邮箱',
+    'Phone': '联系电话',
+    'QQ': 'QQ 联系',
+    'Custom': '自定义渠道'
+  };
+  return defaults[platform] || '联系方式';
+}
+
+function getDefaultSocialPlaceholder(platform) {
+  const placeholders = {
+    'WeChat': '输入微信号或跳转链接',
+    'WeChatOfficial': 'https://mp.weixin.qq.com/...',
+    'Weibo': 'https://weibo.com/你的主页',
+    'LinkedIn': 'https://www.linkedin.com/in/username',
+    'Twitter': 'https://twitter.com/username',
+    'Email': 'mailto:you@example.com',
+    'Phone': 'tel:13800138000',
+    'QQ': 'https://wpa.qq.com/msgrd?v=3&uin=你的QQ',
+    'Custom': 'https://example.com/contact'
+  };
+  return placeholders[platform] || 'https://example.com';
+}
+
+function handleSocialPlatformChange() {
+  const platformSelect = $('#socialPlatform');
+  const labelInput = $('#socialLabel');
+  const urlInput = $('#socialUrl');
+  if (!platformSelect || !labelInput || !urlInput) return;
+  const platform = platformSelect.value;
+  const defaultLabel = getDefaultSocialLabel(platform);
+  if (!labelInput.value.trim() || labelInput.dataset.autofill !== 'false') {
+    labelInput.value = defaultLabel;
+    labelInput.dataset.autofill = 'true';
+  }
+  urlInput.placeholder = getDefaultSocialPlaceholder(platform);
+}
+
+function handleProductNameInput() {
+  const nameInput = $('#productName');
+  const shareInput = $('#productShareText');
+  if (!nameInput || !shareInput) return;
+  if (shareInput.dataset.autofill === 'false') {
+    return;
+  }
+  const name = nameInput.value.trim();
+  if (name) {
+    shareInput.value = `我推荐的产品：${name}`;
+  } else {
+    shareInput.value = '';
+  }
+  shareInput.dataset.autofill = 'true';
+}
+
+async function copyProfileLink() {
+  const handle = $('#profileHandle')?.value.trim();
+  if (!handle) {
+    alert('请先填写页面标识');
+    return;
+  }
+  const domainEl = $('#handleDomain');
+  const domainText = domainEl?.textContent?.trim();
+  const origin = (window.location.origin && window.location.origin !== 'null') ? window.location.origin : '';
+  const base = origin || (window.location.protocol ? `${window.location.protocol}//${window.location.host || domainText || 'contact-me.dev'}` : `https://${domainText || 'contact-me.dev'}`);
+  const url = `${base.replace(/\/$/, '')}/${handle}`;
+  
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(url);
+    } else {
+      const temp = document.createElement('textarea');
+      temp.value = url;
+      temp.setAttribute('readonly', '');
+      temp.style.position = 'absolute';
+      temp.style.left = '-9999px';
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand('copy');
+      document.body.removeChild(temp);
+    }
+    if (window.ImageUploader?.showToast) {
+      window.ImageUploader.showToast('页面链接已复制', 'success');
+    } else {
+      alert(`链接已复制：${url}`);
+    }
+  } catch (error) {
+    console.error('复制链接失败:', error);
+    if (window.ImageUploader?.showToast) {
+      window.ImageUploader.showToast('复制失败，请稍后再试', 'error');
+    } else {
+      alert('复制失败，请稍后再试');
+    }
+  }
+}
+
+function setPreviewToggleButton(collapsed) {
+  const buttons = $all('[data-preview-toggle]');
+  if (!buttons.length) return;
+  const icon = collapsed ? 'bx bx-show' : 'bx bx-layout';
+  const text = collapsed ? '恢复预览' : '聚焦编辑';
+  const aria = collapsed ? '恢复预览面板' : '隐藏预览，专注编辑';
+  buttons.forEach((btn) => {
+    const variant = btn.dataset.previewToggle;
+    if (variant === 'header') {
+      const compactText = collapsed ? '预览' : '聚焦';
+      btn.innerHTML = `<i class='${icon}'></i><span><span class="sm:hidden">${compactText}</span><span class="hidden sm:inline">${text}</span></span>`;
+    } else {
+      btn.innerHTML = `<i class='${icon}'></i><span>${text}</span>`;
+    }
+    btn.setAttribute('aria-pressed', collapsed ? 'true' : 'false');
+    btn.title = aria;
+    btn.setAttribute('aria-label', aria);
+  });
+}
+
+function togglePreviewLayout() {
+  const collapsed = document.body.classList.toggle('preview-collapsed');
+  setPreviewToggleButton(collapsed);
+  if (collapsed) {
+    if (previewRefreshTimer) {
+      clearTimeout(previewRefreshTimer);
+      previewRefreshTimer = null;
+      pendingPreviewHandle = null;
+    }
+    return;
+  }
+  schedulePreviewRefresh(getCurrentHandleValue(), 'manual');
+}
+
 // 清空表单
 function clearSocialForm() {
-  $('#socialPlatform').value = 'WeChat';
-  $('#socialLabel').value = '';
-  $('#socialUrl').value = '';
-  $('#socialQr').value = '';
-  $('#socialQrNote').value = '';
+  const platformSelect = $('#socialPlatform');
+  if (platformSelect) platformSelect.value = 'WeChat';
+  const labelInput = $('#socialLabel');
+  if (labelInput) {
+    labelInput.value = '';
+    labelInput.dataset.autofill = 'true';
+  }
+  const urlInput = $('#socialUrl');
+  if (urlInput) {
+    urlInput.value = '';
+  }
+  const qrInput = $('#socialQr');
+  if (qrInput) {
+    qrInput.value = '';
+  }
+  const noteInput = $('#socialQrNote');
+  if (noteInput) {
+    noteInput.value = '';
+  }
   
   // 重置编辑状态
   window.editingSocialId = null;
   $('#socialModalTitle').textContent = '新增联系方式';
   $('#saveSocial').textContent = '保存';
   
-  // 隐藏预览
+  const preview = $('#qrPreview');
+  if (preview) preview.src = '';
   const container = $('#qrPreviewContainer');
   if (container) container.classList.add('hidden');
+  
+  handleSocialPlatformChange();
 }
 
 function clearProductForm() {
-  $('#productName').value = '';
+  const nameInput = $('#productName');
+  if (nameInput) nameInput.value = '';
   $('#productDescription').value = '';
   $('#productImage').value = '';
   $('#productUrl').value = '';
-  $('#productShareText').value = '';
+  const shareInput = $('#productShareText');
+  if (shareInput) {
+    shareInput.value = '';
+    shareInput.dataset.autofill = 'true';
+  }
   
   // 重置编辑状态  
   window.editingProductId = null;
   $('#productModalTitle').textContent = '新增产品';
   $('#saveProduct').textContent = '保存';
   
-  // 隐藏预览
+  const preview = $('#productImagePreview');
+  if (preview) preview.src = '';
   const container = $('#productImagePreviewContainer');
   if (container) container.classList.add('hidden');
+  
+  handleProductNameInput();
 }
 
 // 预览页面
-function previewPage() {
-  const handle = $('#profileHandle').value;
+async function previewPage() {
+  const handle = $('#profileHandle').value.trim();
   if (!handle) {
     alert('请先填写页面标识');
     return;
   }
   
-  // 先保存当前数据
-  saveProfile().then(() => {
-    const url = `/profile.html?handle=${handle}&preview=true`;
-    window.open(url, '_blank');
-  });
+  try {
+    await saveProfile({ reason: 'manual' });
+  } catch (error) {
+    console.error('保存失败，无法预览:', error);
+    return;
+  }
+  
+  const url = `/profile.html?handle=${handle}&preview=true`;
+  window.open(url, '_blank');
 }
 
 // 发布页面
 async function publishPage() {
-  const handle = $('#profileHandle').value;
+  const handle = $('#profileHandle').value.trim();
   if (!handle) {
     alert('请先填写页面标识');
     return;
   }
   
-  // 先保存当前数据
-  await saveProfile();
+  try {
+    await saveProfile({ reason: 'manual' });
+  } catch (error) {
+    console.error('保存失败，无法发布:', error);
+    return;
+  }
   
   if (!currentProfile) {
     alert('请先保存基本信息');
@@ -770,18 +1259,21 @@ async function publishPage() {
 }
 
 // 刷新预览
-function refreshPreview() {
-  const handle = $('#profileHandle').value;
+async function refreshPreview() {
+  const handle = $('#profileHandle').value.trim();
   if (!handle) {
     alert('请先填写页面标识');
     return;
   }
   
-  // 先保存当前数据
-  saveProfile().then(() => {
-    const iframe = $('#previewFrame');
-    iframe.src = `/profile.html?handle=${handle}&preview=true`;
-  });
+  try {
+    await saveProfile({ reason: 'manual', skipPreviewRefresh: true });
+  } catch (error) {
+    console.error('保存失败，无法刷新预览:', error);
+    return;
+  }
+  
+  refreshPreviewFrame(handle, { reason: 'manual', force: true });
 }
 
 // 编辑社交链接
@@ -806,10 +1298,16 @@ async function editSocial(id) {
   
   // 填充编辑表单
   $('#socialPlatform').value = social.platform || 'WeChat';
-  $('#socialLabel').value = social.label || '';
+  const labelInput = $('#socialLabel');
+  if (labelInput) {
+    labelInput.value = social.label || '';
+    labelInput.dataset.autofill = 'false';
+  }
   $('#socialUrl').value = social.url || '';
   $('#socialQr').value = social.qr_image_url || '';
   $('#socialQrNote').value = social.qr_note || '';
+  
+  handleSocialPlatformChange();
   
   // 设置编辑模式
   window.editingSocialId = id;
@@ -850,6 +1348,7 @@ async function deleteSocial(id) {
   }
   
   loadSocials();
+  schedulePreviewRefresh(getCurrentHandleValue(), 'manual');
 }
 
 // 编辑产品
@@ -873,16 +1372,25 @@ async function editProduct(id) {
   }
   
   // 填充编辑表单
-  $('#productName').value = product.name || '';
+  const nameInput = $('#productName');
+  if (nameInput) nameInput.value = product.name || '';
   $('#productDescription').value = product.description || '';
   $('#productImage').value = product.image_url || '';
   $('#productUrl').value = product.url || '';
-  $('#productShareText').value = product.share_text || '';
+  const shareInput = $('#productShareText');
+  if (shareInput) {
+    shareInput.value = product.share_text || '';
+    shareInput.dataset.autofill = 'false';
+  }
   
   // 设置编辑模式
   window.editingProductId = id;
   $('#productModalTitle').textContent = '编辑产品';
   $('#saveProduct').textContent = '更新产品';
+  
+  if (nameInput) {
+    handleProductNameInput();
+  }
   
   // 如果有产品图片，显示预览
   if (product.image_url) {
@@ -918,6 +1426,7 @@ async function deleteProduct(id) {
   }
   
   loadProducts();
+  schedulePreviewRefresh(getCurrentHandleValue(), 'manual');
 }
 
 // 退出登录
