@@ -11,19 +11,23 @@
   <link rel="stylesheet" href="/assets/vendor/boxicons/css/boxicons.min.css">
   <link rel="stylesheet" href="/assets/vendor/inter/inter.css">
   <link rel="stylesheet" href="/assets/styles/ui.css">
+  <link rel="stylesheet" href="/assets/styles/theme-dark.css">
 </head>
-<body class="min-h-screen">
-  <div class="flex min-h-screen flex-col bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.12),_transparent_60%)] dark:bg-none">
-    <header class="sticky top-0 z-50 border-b border-border bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 dark:bg-slate-900/80">
-      <div class="container flex h-16 items-center justify-between">
-        <a href="/" class="flex items-center gap-2 text-lg font-semibold text-sky-600">
-          <span>联系我</span>
-          <span class="badge badge-primary hidden sm:inline-flex items-center gap-1">
+<body class="dashboard-body">
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="container app-header-inner">
+        <div class="app-brand-group">
+          <a href="/" class="app-brand">
+            <i class='bx bx-aperture'></i>
+            <span>联系我</span>
+          </a>
+          <span class="badge badge-soft hidden sm:inline-flex items-center gap-1">
             <i class='bx bx-pencil'></i>
             编辑器
           </span>
-        </a>
-        <div class="flex items-center gap-3">
+        </div>
+        <div class="app-controls">
           <div id="saveStatus" class="save-indicator hidden md:inline-flex" data-state="saved">
             <span class="status-dot"></span>
             <span data-text>已保存</span>
@@ -35,7 +39,7 @@
               <span class="hidden sm:inline">聚焦编辑</span>
             </span>
           </button>
-          <div class="hidden sm:flex items-center gap-2">
+          <div class="app-primary-actions hidden sm:flex">
             <button id="previewBtn" class="btn btn-outline">
               <i class='bx bx-show'></i>
               <span class="hidden md:inline">预览</span>
@@ -45,7 +49,7 @@
               发布
             </button>
           </div>
-          <div class="flex items-center gap-3 border-l border-border pl-3">
+          <div class="app-user">
             <div class="flex items-center gap-2">
               <img id="userAvatar" src="/assets/images/default-avatar.svg" alt="avatar" class="h-9 w-9 rounded-full border border-border object-cover">
               <div class="leading-tight">
@@ -61,7 +65,7 @@
       </div>
     </header>
 
-    <main class="container flex-1 pb-16 pt-10">
+    <main class="app-main container">
       <div class="layout-grid grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.85fr)] xl:grid-cols-[minmax(0,1.55fr)_minmax(0,0.75fr)] 2xl:grid-cols-[minmax(0,1.85fr)_minmax(0,0.7fr)] lg:gap-8">
         <section class="layout-editor space-y-6 lg:space-y-8">
           <div class="card">

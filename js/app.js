@@ -8,7 +8,7 @@ const shareTemplates = [
   {
     id: 'aurora',
     name: '灵动云光',
-    background: 'linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 55%, #f472b6 100%)',
+    background: 'linear-gradient(135deg, #38bdf8 0%, #6366f1 55%, #f472b6 100%)',
     accent: '#38bdf8',
     kicker: 'Personal Brand',
     highlight: '一键生成产品亮点',
@@ -156,7 +156,7 @@ function setText(id, text) {
 
 function makeSocialButton(link) {
   const a = document.createElement('a');
-  a.className = 'glass flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-sky-400 transition';
+  a.className = 'profile-social';
   a.href = link.url || '#';
   a.target = link.url && link.url.startsWith('http') ? '_blank' : '_self';
   a.rel = 'noopener noreferrer';
@@ -167,10 +167,11 @@ function makeSocialButton(link) {
     }
   });
   const i = document.createElement('i');
-  i.className = `bx ${link.icon || 'bx-link'} text-lg`;
+  i.className = `bx ${link.icon || 'bx-link'}`;
   const span = document.createElement('span');
   span.textContent = link.label || link.name || '链接';
-  a.appendChild(i); a.appendChild(span);
+  a.appendChild(i);
+  a.appendChild(span);
   return a;
 }
 
@@ -179,31 +180,34 @@ function renderProducts(products) {
   container.innerHTML = '';
   (products || []).forEach((p) => {
     const card = document.createElement('article');
-    card.className = 'glass rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700';
+    card.className = 'profile-product';
     const img = document.createElement('img');
-    img.className = 'w-full h-44 object-cover bg-slate-100 dark:bg-slate-800';
+    img.className = 'profile-product-img';
     img.src = p.image || '/assets/images/product-placeholder.png';
     img.alt = p.name || 'product';
     const box = document.createElement('div');
-    box.className = 'p-4';
+    box.className = 'profile-product-body';
     const h3 = document.createElement('h3');
-    h3.className = 'font-semibold';
+    h3.className = 'profile-product-name';
     h3.textContent = p.name || '产品名称';
     const desc = document.createElement('p');
-    desc.className = 'text-sm text-slate-600 dark:text-slate-300 mt-1';
+    desc.className = 'profile-product-desc';
     desc.textContent = p.description || '';
     const row = document.createElement('div');
-    row.className = 'mt-3 flex items-center gap-2';
+    row.className = 'profile-product-actions';
     if (p.url) {
       const btn = document.createElement('a');
-      btn.href = p.url; btn.target = '_blank'; btn.rel = 'noopener noreferrer';
-      btn.className = 'px-3 py-1.5 rounded-lg bg-sky-600 text-white text-sm hover:bg-sky-500';
+      btn.href = p.url;
+      btn.target = '_blank';
+      btn.rel = 'noopener noreferrer';
+      btn.className = 'profile-product-link';
       btn.textContent = '查看';
       row.appendChild(btn);
     }
     if (p.shareText) {
       const sbtn = document.createElement('button');
-      sbtn.className = 'px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm hover:border-sky-400';
+      sbtn.type = 'button';
+      sbtn.className = 'profile-product-share';
       sbtn.textContent = '分享';
       sbtn.addEventListener('click', () => share({
         title: p.name,
@@ -212,8 +216,11 @@ function renderProducts(products) {
       }));
       row.appendChild(sbtn);
     }
-    box.appendChild(h3); box.appendChild(desc); box.appendChild(row);
-    card.appendChild(img); card.appendChild(box);
+    box.appendChild(h3);
+    box.appendChild(desc);
+    box.appendChild(row);
+    card.appendChild(img);
+    card.appendChild(box);
     container.appendChild(card);
   });
 }
@@ -238,6 +245,28 @@ function hexToRgba(hex, alpha = 1) {
   const g = parseInt(short ? value[1] + value[1] : value.slice(2, 4), 16);
   const b = parseInt(short ? value[2] + value[2] : value.slice(4, 6), 16);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function normalizeHex(hex) {
+  if (!hex) return '#38bdf8';
+  const value = hex.toString().trim().replace('#', '');
+  if (!value) return '#38bdf8';
+  if (value.length === 3) {
+    return `#${value.split('').map(ch => ch + ch).join('')}`;
+  }
+  const base = value.slice(0, 6);
+  return `#${base.padEnd(6, base[base.length - 1] || '0')}`;
+}
+
+function mixWithWhite(hex, amount = 0.35) {
+  const normalized = normalizeHex(hex);
+  const clamp = Math.min(Math.max(amount, 0), 1);
+  const r = parseInt(normalized.slice(1, 3), 16);
+  const g = parseInt(normalized.slice(3, 5), 16);
+  const b = parseInt(normalized.slice(5, 7), 16);
+  const mix = (channel) => Math.round(channel + (255 - channel) * clamp);
+  const toHex = (value) => value.toString(16).padStart(2, '0');
+  return `#${toHex(mix(r))}${toHex(mix(g))}${toHex(mix(b))}`;
 }
 
 function getShareUrl() {
@@ -320,13 +349,13 @@ async function renderSharePoster(templateId = currentShareTemplateId) {
   const container = $('#posterPreview');
   if (!container) return;
   if (!currentProfileData) {
-    container.innerHTML = '<div class="text-sm text-slate-500">资料加载中，请稍后再试。</div>';
+    container.innerHTML = "<div class='share-loading'><i class='bx bx-time-five'></i><span>资料加载中，请稍后再试。</span></div>";
     updateShareStatus('资料加载中，请稍后再试。', 'info');
     return;
   }
   updateShareStatus('正在生成分享海报...', 'info');
   currentShareTemplateId = templateId;
-  container.innerHTML = "<div class='flex items-center gap-2 text-slate-500 text-sm'><i class='bx bx-loader-alt bx-spin'></i><span>正在生成海报...</span></div>";
+  container.innerHTML = "<div class='share-loading'><i class='bx bx-loader-alt bx-spin'></i><span>正在生成海报...</span></div>";
   const template = getShareTemplate(templateId);
   const shareUrl = getShareUrl();
   const poster = buildPosterElement(template, currentProfileData, shareUrl);
@@ -818,33 +847,14 @@ async function share(payload) {
 }
 
 function applyThemeColor(color) {
-  // 使用CSS变量应用主题色
-  document.documentElement.style.setProperty('--theme-color', color);
-  
-  // 直接更新关键元素的样式
-  const elements = {
-    // 主要按钮
-    '#cta': `background-color: ${color} !important;`,
-    // 纸牌 hover效果
-    '.glass:hover': `border-color: ${color}40 !important;`,
-    // 按钮
-    'button.bg-sky-600': `background-color: ${color} !important;`,
-    'a.bg-sky-600': `background-color: ${color} !important;`,
-    // 标签
-    '.bg-sky-50': `background-color: ${color}10 !important; color: ${color} !important; border-color: ${color}20 !important;`
-  };
-  
-  // 创建或更新样式表
-  let styleEl = document.getElementById('dynamic-theme');
-  if (!styleEl) {
-    styleEl = document.createElement('style');
-    styleEl.id = 'dynamic-theme';
-    document.head.appendChild(styleEl);
-  }
-  
-  styleEl.textContent = Object.entries(elements)
-    .map(([selector, styles]) => `${selector} { ${styles} }`)
-    .join('\n');
+  const normalized = normalizeHex(color);
+  const root = document.documentElement;
+  root.style.setProperty('--theme-color', normalized);
+  root.style.setProperty('--theme-accent', normalized);
+  root.style.setProperty('--theme-color-soft', hexToRgba(normalized, 0.18));
+  root.style.setProperty('--theme-color-strong', hexToRgba(normalized, 0.32));
+  root.style.setProperty('--theme-color-text', mixWithWhite(normalized, 0.55));
+  root.style.setProperty('--theme-accent-alt', mixWithWhite(normalized, 0.35));
 }
 
 function hydrateFallbackStatic() {
@@ -857,7 +867,7 @@ function hydrateFallbackStatic() {
     badges: ['低代码', '技术分享', '开发者'],
     bio: '专注低代码技术分享，帮助开发者快速构建应用，提升开发效率。',
     cta: { url: '#', label: '技术交流' },
-    themeColor: '#0ea5e9',
+    themeColor: '#38bdf8',
     socials: [
       { name: 'WeChat', label: '个人微信', icon: 'bx-qr', qr: { url: '/assets/images/demo-wechat.jpg', note: '醒着做梦' } },
       { name: 'WeChatOfficial', label: '微信公众号', icon: 'bx-qr', qr: { url: '/assets/images/demo-wechat-official.jpg', note: '低代码分享' } },
@@ -894,7 +904,7 @@ function applyData(data) {
   badges.innerHTML = '';
   (data.badges || []).forEach((b) => {
     const tag = document.createElement('span');
-    tag.className = 'text-xs px-2 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-100 dark:bg-slate-800 dark:text-sky-300 dark:border-slate-700';
+    tag.className = 'profile-tag';
     tag.textContent = b;
     badges.appendChild(tag);
   });
@@ -950,7 +960,7 @@ async function loadData() {
     badges: (data.tags || '').split(',').filter(Boolean),
     bio: data.bio,
     cta: { url: data.cta_url, label: data.cta_label },
-    themeColor: data.theme_color || '#0ea5e9',
+    themeColor: data.theme_color || '#38bdf8',
     socials: (data.socials || []).map(s => ({
       name: s.platform,
       label: s.label || s.platform,
