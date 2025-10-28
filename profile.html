@@ -3,366 +3,97 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="theme-color" content="#0ea5e9">
+  <meta name="theme-color" content="#38bdf8">
   <title>联系我 | 低代码分享</title>
   <meta name="description" content="专注低代码技术分享，助力开发者快速构建应用。">
   <link rel="icon" href="/favicon.svg">
   <script src="/assets/vendor/tailwindcss/tailwindcss.js"></script>
   <link rel="stylesheet" href="/assets/vendor/boxicons/css/boxicons.min.css">
   <link rel="stylesheet" href="/assets/vendor/inter/inter.css">
-  <style>
-    :root { --accent: #0ea5e9; }
-    html, body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
-    .glass { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); background: rgba(255,255,255,0.7); }
-    .dark .glass { background: rgba(0,0,0,0.35); }
-    dialog::backdrop { background: rgba(15, 23, 42, 0.55); backdrop-filter: blur(2px); }
-    .share-template-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.5rem 0.9rem;
-      border-radius: 9999px;
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      background: rgba(255, 255, 255, 0.65);
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: #0f172a;
-      transition: all 0.25s ease;
-    }
-    .share-template-btn:hover {
-      border-color: rgba(14, 165, 233, 0.6);
-      background: rgba(255, 255, 255, 0.9);
-      transform: translateY(-1px);
-    }
-    .share-template-btn.is-active {
-      border-color: #0ea5e9;
-      background: rgba(14, 165, 233, 0.15);
-      color: #0284c7;
-      box-shadow: 0 8px 18px rgba(14, 165, 233, 0.18);
-    }
-    .share-template-color {
-      width: 12px;
-      height: 12px;
-      border-radius: 9999px;
-      box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.55);
-    }
-    .share-template-btn.is-active .share-template-color {
-      box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.35);
-    }
-    .share-poster {
-      width: 100%;
-      max-width: 420px;
-      aspect-ratio: 3 / 4;
-      border-radius: 28px;
-      overflow: hidden;
-      position: relative;
-      color: #fff;
-      padding: 28px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 18px;
-      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35);
-      background-size: 220% 220%;
-      animation: posterGradient 16s ease infinite;
-    }
-    .share-poster::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(circle at 82% 10%, rgba(255, 255, 255, 0.22), transparent 55%);
-      pointer-events: none;
-    }
-    .share-poster-body {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      flex: 1;
-    }
-    .share-avatar {
-      width: 72px;
-      height: 72px;
-      border-radius: 24px;
-      overflow: hidden;
-      border: 2px solid rgba(255, 255, 255, 0.4);
-      background: rgba(255, 255, 255, 0.15);
-    }
-    .share-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-    .share-kicker {
-      font-size: 0.7rem;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      opacity: 0.75;
-    }
-    .share-name {
-      font-size: 1.8rem;
-      margin: 0.25rem 0 0;
-      font-weight: 700;
-    }
-    .share-role {
-      font-size: 0.95rem;
-      opacity: 0.85;
-      margin: 0.35rem 0 0;
-    }
-    .share-bio {
-      font-size: 0.9rem;
-      line-height: 1.55;
-      opacity: 0.9;
-      max-height: 6.5rem;
-      overflow: hidden;
-    }
-    .share-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.45rem;
-    }
-    .share-badge {
-      padding: 0.25rem 0.6rem;
-      border-radius: 9999px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      background: rgba(255, 255, 255, 0.18);
-    }
-    .share-highlight {
-      font-size: 1rem;
-      font-weight: 600;
-      padding: 0.65rem 1rem;
-      border-radius: 18px;
-      background: rgba(255, 255, 255, 0.16);
-      display: inline-flex;
-      gap: 0.4rem;
-      align-items: center;
-    }
-    .share-highlight i {
-      font-size: 1.1rem;
-    }
-    .share-poster-footer {
-      position: relative;
-      z-index: 1;
-      background: rgba(255, 255, 255, 0.92);
-      color: #0f172a;
-      border-radius: 24px;
-      padding: 18px;
-      display: flex;
-      gap: 16px;
-      align-items: center;
-      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
-    }
-    .share-qr {
-      width: 108px;
-      height: 108px;
-      border-radius: 20px;
-      border: 1px solid rgba(148, 163, 184, 0.25);
-      object-fit: cover;
-      background: #fff;
-    }
-    .share-slogan {
-      font-size: 1rem;
-      font-weight: 700;
-    }
-    .share-subline {
-      font-size: 0.75rem;
-      color: rgba(15, 23, 42, 0.6);
-      margin-top: 0.35rem;
-    }
-    .share-url {
-      margin-top: 0.65rem;
-      font-size: 0.7rem;
-      font-weight: 600;
-      background: rgba(14, 165, 233, 0.12);
-      padding: 0.5rem 0.75rem;
-      border-radius: 14px;
-      color: #0369a1;
-      word-break: break-all;
-    }
-    .share-products {
-      margin-top: 0.9rem;
-      padding: 1rem 1.1rem;
-      border-radius: 22px;
-      background: rgba(15, 23, 42, 0.28);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      backdrop-filter: blur(6px);
-      display: grid;
-      gap: 0.75rem;
-    }
-    .share-products-title {
-      font-size: 0.7rem;
-      letter-spacing: 0.24em;
-      text-transform: uppercase;
-      opacity: 0.75;
-    }
-    .share-product-list {
-      display: grid;
-      gap: 0.85rem;
-    }
-    .share-product-item {
-      display: grid;
-      grid-template-columns: auto 1fr;
-      gap: 0.65rem;
-      align-items: flex-start;
-    }
-    .share-product-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.65);
-      box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.18);
-      margin-top: 0.35rem;
-    }
-    .share-product-copy {
-      display: grid;
-      gap: 0.25rem;
-    }
-    .share-product-name {
-      font-size: 0.95rem;
-      font-weight: 600;
-      letter-spacing: 0.01em;
-    }
-    .share-product-desc {
-      font-size: 0.72rem;
-      line-height: 1.5;
-      opacity: 0.85;
-    }
-    .share-product-url {
-      font-size: 0.65rem;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      opacity: 0.75;
-    }
-    #posterPreview {
-      display: flex;
-      justify-content: center;
-      padding: 1.5rem 1rem;
-      background: linear-gradient(135deg, rgba(241, 245, 249, 0.5), rgba(226, 232, 240, 0.8));
-      border-radius: 20px;
-      border: 1px dashed rgba(148, 163, 184, 0.4);
-      min-height: 320px;
-    }
-    .share-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.75rem;
-    }
-    .share-actions button {
-      flex: 1 1 140px;
-    }
-    #shareStatus {
-      font-size: 0.75rem;
-      border-radius: 12px;
-      padding: 0.5rem 0.75rem;
-      margin-top: 0.5rem;
-      background: rgba(14, 165, 233, 0.08);
-      color: #0369a1;
-      display: none;
-    }
-    #shareStatus[data-type] {
-      display: block;
-    }
-    #shareStatus[data-type="info"] {
-      background: rgba(14, 165, 233, 0.08);
-      color: #0369a1;
-    }
-    #shareStatus[data-type="success"] {
-      background: rgba(34, 197, 94, 0.12);
-      color: #047857;
-    }
-    #shareStatus[data-type="error"] {
-      background: rgba(248, 113, 113, 0.14);
-      color: #b91c1c;
-    }
-    @keyframes posterGradient {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-  </style>
+  <link rel="stylesheet" href="/assets/styles/theme-dark.css">
 </head>
-<body class="bg-gradient-to-b from-sky-50 to-white text-slate-800 dark:from-slate-950 dark:to-slate-900 dark:text-slate-100 min-h-screen">
-  <div class="max-w-xl mx-auto px-4 pb-20">
-    <!-- Header / Avatar -->
-    <header class="pt-10 text-center">
-      <div class="inline-block rounded-full p-[3px] bg-gradient-to-tr from-sky-500 to-fuchsia-500">
-        <img id="avatar" alt="avatar" class="h-24 w-24 rounded-full object-cover bg-white" src="" onerror="this.src='/assets/images/default-identicon.svg'">
+<body class="profile-body">
+  <div class="profile-shell">
+    <header class="profile-hero">
+      <span class="profile-eyebrow">
+        <i class='bx bx-pulse'></i>
+        实时预览
+      </span>
+      <div class="profile-avatar">
+        <img id="avatar" alt="avatar" src="" onerror="this.src='/assets/images/default-identicon.svg'">
       </div>
-      <h1 id="name" class="mt-4 text-2xl font-bold">创始人姓名</h1>
-      <p id="title" class="text-slate-500 dark:text-slate-400">身份 / 头衔</p>
-      <div id="badges" class="mt-3 flex items-center justify-center gap-2 flex-wrap"></div>
-      <div class="mt-4 flex items-center justify-center gap-3">
-        <button id="shareBtn" class="glass text-sm px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 hover:border-sky-400 hover:text-sky-600 dark:hover:text-sky-300 transition">
-          <i class='bx bx-share-alt align-[-2px]'></i> 一键分享
+      <div>
+        <h1 id="name" class="profile-name">创始人姓名</h1>
+        <p id="title" class="profile-title">身份 / 头衔</p>
+      </div>
+      <div id="badges" class="profile-tags"></div>
+      <div class="profile-actions">
+        <button id="shareBtn" class="profile-share">
+          <i class='bx bx-share-alt'></i>
+          一键分享
         </button>
-        <a id="contactPrimary" href="#contacts" class="text-sm px-4 py-2 rounded-full bg-sky-600 text-white hover:bg-sky-500 transition">
+        <a id="contactPrimary" href="#contacts" class="profile-primary-action">
           立即联系
         </a>
       </div>
     </header>
 
-    <!-- About -->
-    <section class="mt-8 glass rounded-xl p-5 border border-slate-200 dark:border-slate-700">
-      <h2 class="text-lg font-semibold mb-2">个人简介</h2>
-      <p id="bio" class="text-slate-600 dark:text-slate-300 leading-relaxed">我是一名专注于……的创业者，目前在打造……欢迎交流合作。</p>
+    <section class="profile-section">
+      <h2>个人简介</h2>
+      <p id="bio">我是一名专注于……的创业者，目前在打造……欢迎交流合作。</p>
     </section>
 
-    <!-- Contacts -->
-    <section id="contacts" class="mt-6 grid gap-3">
-      <h2 class="text-lg font-semibold">联系方式</h2>
-      <div id="socialLinks" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
-      <div id="qrGallery" class="mt-2 grid grid-cols-2 gap-3"></div>
+    <section id="contacts" class="profile-section">
+      <h2>联系方式</h2>
+      <div id="socialLinks" class="profile-social-list"></div>
+      <div id="qrGallery" class="profile-qr-grid"></div>
     </section>
 
-    <!-- Products -->
-    <section class="mt-8">
-      <h2 class="text-lg font-semibold">产品介绍</h2>
-      <div id="products" class="mt-3 grid gap-4"></div>
+    <section class="profile-section">
+      <h2>产品介绍</h2>
+      <div id="products" class="profile-product-list"></div>
     </section>
 
-    <!-- CTA -->
-    <section class="mt-10 text-center">
-      <a id="cta" href="#" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-sky-600 to-fuchsia-600 text-white font-semibold shadow hover:opacity-95">
-        立即体验产品 <i class='bx bx-right-arrow-alt text-xl'></i>
+    <section class="profile-cta">
+      <h2>想了解更多？</h2>
+      <p class="profile-cta-note">点击下方按钮直达产品或预约演示</p>
+      <a id="cta" href="#" class="profile-cta-button">
+        立即体验产品 <i class='bx bx-right-arrow-alt'></i>
       </a>
-      <p class="text-xs text-slate-500 mt-2">点击上方按钮直达产品或预约演示</p>
     </section>
 
-    <footer class="mt-12 text-center text-xs text-slate-400">
+    <footer class="profile-footer">
       <p>© <span id="year"></span> <span id="footerName">Contact Me</span>. Powered by <a href="https://contact-me.dev">联系我</a>.</p>
     </footer>
   </div>
 
-  <!-- QR Modal -->
-  <dialog id="qrModal" class="rounded-2xl p-0 border border-slate-200 dark:border-slate-700 w-80">
-    <div class="p-5">
-      <h3 id="qrTitle" class="font-semibold mb-2">扫码添加</h3>
-      <img id="qrImage" alt="QR" class="w-full rounded-lg border border-slate-200 dark:border-slate-700" src="">
-      <p id="qrNote" class="text-xs text-slate-500 mt-2">长按保存二维码</p>
+  <dialog id="qrModal">
+    <div class="dialog-header">
+      <h3 id="qrTitle" class="dialog-title">扫码添加</h3>
     </div>
-    <form method="dialog" class="p-3 border-t border-slate-200 dark:border-slate-700">
-      <button class="w-full py-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700">关闭</button>
+    <div class="dialog-body">
+      <img id="qrImage" alt="QR" src="" class="profile-qr-image">
+      <p id="qrNote" class="dialog-description">长按保存二维码</p>
+    </div>
+    <form method="dialog" class="dialog-footer">
+      <button class="btn btn-outline dialog-close">关闭</button>
     </form>
   </dialog>
 
-  <!-- Share Modal -->
-  <dialog id="shareModal" class="rounded-2xl p-0 border border-slate-200 dark:border-slate-700 w-[min(90vw,640px)]">
-    <div class="p-6 space-y-5">
-      <div class="flex items-start justify-between">
-        <div>
-          <h3 class="text-lg font-semibold">一键分享名片</h3>
-          <p class="text-xs text-slate-500 mt-1">生成带二维码的简介海报，在任意社媒一张图讲清你的产品与服务。</p>
-        </div>
-        <button id="closeShareModal" type="button" class="text-slate-400 hover:text-slate-600">
-          <i class='bx bx-x text-2xl'></i>
-        </button>
+  <dialog id="shareModal">
+    <div class="dialog-header">
+      <div>
+        <h3 class="dialog-title">一键分享名片</h3>
+        <p class="dialog-description">生成带二维码的简介海报，在任意社媒一张图讲清你的产品与服务。</p>
       </div>
-      <div class="flex flex-wrap gap-2" id="posterTemplates">
+      <button id="closeShareModal" type="button" class="btn btn-ghost btn-icon" title="关闭">
+        <i class='bx bx-x'></i>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <div id="posterTemplates">
         <button class="share-template-btn is-active" data-template="aurora">
-          <span class="share-template-color" style="background: linear-gradient(135deg, #0ea5e9, #8b5cf6);"></span>
+          <span class="share-template-color" style="background: linear-gradient(135deg, #38bdf8, #6366f1);"></span>
           <span>灵动云光</span>
         </button>
         <button class="share-template-btn" data-template="sunrise">
@@ -375,32 +106,32 @@
         </button>
       </div>
       <div id="posterPreview">
-        <div class="flex items-center gap-2 text-slate-500 text-sm">
+        <div class="share-loading">
           <i class='bx bx-loader-alt bx-spin'></i>
           <span>正在准备分享海报...</span>
         </div>
       </div>
       <div id="shareStatus"></div>
       <div class="share-actions">
-        <button id="downloadPoster" type="button" class="px-4 py-2 text-sm font-semibold rounded-xl bg-sky-600 text-white hover:bg-sky-500 transition">
-          <i class='bx bx-download align-[-2px]'></i> 下载海报
+        <button id="downloadPoster" type="button" class="btn btn-primary">
+          <i class='bx bx-download'></i>
+          下载海报
         </button>
-        <button id="copyShareLink" type="button" class="px-4 py-2 text-sm font-semibold rounded-xl border border-slate-200 hover:border-sky-400 transition">
-          <i class='bx bx-link-alt align-[-2px]'></i> 复制链接
+        <button id="copyShareLink" type="button" class="btn btn-outline">
+          <i class='bx bx-link-alt'></i>
+          复制链接
         </button>
-        <button id="nativeShare" type="button" class="px-4 py-2 text-sm font-semibold rounded-xl border border-slate-200 hover:border-sky-400 transition">
-          <i class='bx bx-share-alt align-[-2px]'></i> 系统分享
+        <button id="nativeShare" type="button" class="btn btn-outline">
+          <i class='bx bx-share-alt'></i>
+          系统分享
         </button>
       </div>
     </div>
-    <form method="dialog" class="p-4 border-t border-slate-200 dark:border-slate-700 text-right">
-      <button class="inline-flex items-center justify-center px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition">
-        已完成
-      </button>
+    <form method="dialog" class="dialog-footer">
+      <button class="btn btn-outline dialog-close">已完成</button>
     </form>
   </dialog>
 
-  <!-- App Config & Scripts -->
   <script src="/js/config.js"></script>
   <script src="/assets/vendor/supabase/supabase.js"></script>
   <script src="/assets/vendor/qrcode/qrcode.min.js"></script>
@@ -408,4 +139,3 @@
   <script src="/js/app.js"></script>
 </body>
 </html>
-
