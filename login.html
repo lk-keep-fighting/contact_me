@@ -3,111 +3,97 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="theme-color" content="#0ea5e9">
+  <meta name="theme-color" content="#38bdf8">
   <title>登录 - 联系我</title>
   <meta name="description" content="登录你的联系我账户，管理个人介绍页面">
   <link rel="icon" href="/favicon.svg">
   <script src="/assets/vendor/tailwindcss/tailwindcss.js"></script>
   <link rel="stylesheet" href="/assets/vendor/boxicons/css/boxicons.min.css">
   <link rel="stylesheet" href="/assets/vendor/inter/inter.css">
-  <style>
-    :root { --accent: #0ea5e9; }
-    html, body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
-  </style>
+  <link rel="stylesheet" href="/assets/styles/theme-dark.css">
 </head>
-<body class="bg-gradient-to-b from-sky-50 to-white text-slate-800 min-h-screen flex items-center justify-center">
-  <div class="max-w-md w-full mx-4">
-    <!-- Logo -->
-    <div class="text-center mb-8">
-      <h1 class="text-3xl font-bold text-sky-600 mb-2">联系我</h1>
-      <p class="text-slate-600">为创业者打造的个人介绍平台</p>
-    </div>
+<body class="auth-body">
+  <div class="auth-shell">
+    <section class="auth-intro">
+      <span class="auth-kicker">
+        <i class='bx bx-sparkles'></i>
+        联系我 · 次世代
+      </span>
+      <h1 class="auth-title">三分钟上线你的数字名片</h1>
+      <p class="auth-description">登录工作台即可实时编辑主页、同步发布到所有渠道，让更多人快速了解你和你的产品。</p>
+      <ul class="auth-highlights">
+        <li><i class='bx bx-check-circle'></i> 所见即所得的内容编辑与主题配色</li>
+        <li><i class='bx bx-check-circle'></i> 支持产品卡片、社交二维码与一键分享</li>
+        <li><i class='bx bx-check-circle'></i> 后台访问统计，随时掌握曝光数据</li>
+      </ul>
+    </section>
 
-    <!-- 登录表单 -->
-    <div class="bg-white rounded-2xl shadow-xl p-8 border border-slate-200">
-      <h2 class="text-2xl font-semibold text-center mb-6">登录账户</h2>
-      
-      <form id="loginForm" class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium mb-2">邮箱</label>
-          <input id="email" type="email" required class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="your@email.com">
+    <section class="auth-panel">
+      <div class="auth-card" id="loginCard">
+        <div class="auth-card-header">
+          <h2 class="auth-card-title">登录账户</h2>
+          <p class="auth-card-subtitle">使用邮箱和密码进入管理后台，继续打造你的个人品牌。</p>
         </div>
-        
-        <div>
-          <label class="block text-sm font-medium mb-2">密码</label>
-          <input id="password" type="password" required class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="••••••••">
+        <form id="loginForm" class="auth-form">
+          <div class="auth-field">
+            <label for="email">邮箱</label>
+            <input id="email" type="email" class="input" placeholder="your@email.com" required autocomplete="email">
+          </div>
+          <div class="auth-field">
+            <label for="password">密码</label>
+            <input id="password" type="password" class="input" placeholder="••••••••" required autocomplete="current-password">
+          </div>
+          <button type="submit" class="btn btn-primary auth-btn-full">登录</button>
+        </form>
+        <div class="auth-switch">
+          <span>还没有账户？ <a href="#" id="showRegister">立即注册</a></span>
         </div>
-        
-        <button type="submit" class="w-full py-3 bg-sky-600 text-white rounded-lg hover:bg-sky-500 transition font-semibold">
-          登录
-        </button>
-      </form>
-
-      <div class="mt-6 text-center">
-        <p class="text-sm text-slate-600">
-          还没有账户？ 
-          <a href="#" id="showRegister" class="text-sky-600 hover:underline font-medium">立即注册</a>
-        </p>
-      </div>
-
-      <div class="mt-4 text-center">
-        <button id="demoLogin" class="text-sm text-slate-500 hover:text-slate-700">
+        <button id="demoLogin" type="button" class="btn btn-outline auth-btn-full auth-demo-btn">
+          <i class='bx bx-planet'></i>
           体验演示账户
         </button>
+        <p class="auth-hint">无需注册即可体验完整功能，随时切换回正式账户。</p>
       </div>
-    </div>
 
-    <!-- 注册表单 -->
-    <div id="registerForm" class="bg-white rounded-2xl shadow-xl p-8 border border-slate-200 hidden">
-      <h2 class="text-2xl font-semibold text-center mb-6">创建账户</h2>
-      
-      <form id="signupForm" class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium mb-2">姓名</label>
-          <input id="signupName" type="text" required class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="你的姓名">
+      <div id="registerForm" class="auth-card hidden">
+        <div class="auth-card-header">
+          <h2 class="auth-card-title">创建账户</h2>
+          <p class="auth-card-subtitle">免费开通联系我账号，快速搭建你的数字名片。</p>
         </div>
-        
-        <div>
-          <label class="block text-sm font-medium mb-2">邮箱</label>
-          <input id="signupEmail" type="email" required class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="your@email.com">
+        <form id="signupForm" class="auth-form">
+          <div class="auth-field">
+            <label for="signupName">姓名</label>
+            <input id="signupName" type="text" class="input" placeholder="你的姓名" required autocomplete="name">
+          </div>
+          <div class="auth-field">
+            <label for="signupEmail">邮箱</label>
+            <input id="signupEmail" type="email" class="input" placeholder="your@email.com" required autocomplete="email">
+          </div>
+          <div class="auth-field">
+            <label for="signupPassword">密码</label>
+            <input id="signupPassword" type="password" class="input" placeholder="至少6位字符" required minlength="6" autocomplete="new-password">
+            <span class="auth-field-note">设置一个安全密码，稍后可在后台修改。</span>
+          </div>
+          <button type="submit" class="btn btn-primary auth-btn-full">创建账户</button>
+        </form>
+        <div class="auth-switch">
+          <span>已有账户？ <a href="#" id="showLogin">立即登录</a></span>
         </div>
-        
-        <div>
-          <label class="block text-sm font-medium mb-2">密码</label>
-          <input id="signupPassword" type="password" required minlength="6" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent" placeholder="至少6位字符">
+      </div>
+
+      <div class="auth-messages">
+        <div id="errorMessage" class="auth-alert auth-alert-error hidden">
+          <i class='bx bx-error-circle'></i>
+          <span id="errorText"></span>
         </div>
-        
-        <button type="submit" class="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-500 transition font-semibold">
-          创建账户
-        </button>
-      </form>
-
-      <div class="mt-6 text-center">
-        <p class="text-sm text-slate-600">
-          已有账户？ 
-          <a href="#" id="showLogin" class="text-sky-600 hover:underline font-medium">立即登录</a>
-        </p>
+        <div id="successMessage" class="auth-alert auth-alert-success hidden">
+          <i class='bx bx-check-circle'></i>
+          <span id="successText"></span>
+        </div>
       </div>
-    </div>
-
-    <!-- 错误提示 -->
-    <div id="errorMessage" class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 hidden">
-      <div class="flex items-center">
-        <i class='bx bx-error-circle text-lg mr-2'></i>
-        <span id="errorText"></span>
-      </div>
-    </div>
-
-    <!-- 成功提示 -->
-    <div id="successMessage" class="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 hidden">
-      <div class="flex items-center">
-        <i class='bx bx-check-circle text-lg mr-2'></i>
-        <span id="successText"></span>
-      </div>
-    </div>
+    </section>
   </div>
 
-  <!-- App Config & Scripts -->
   <script src="/js/config.js"></script>
   <script src="/assets/vendor/supabase/supabase.js"></script>
   <script src="/js/auth.js"></script>
