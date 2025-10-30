@@ -441,6 +441,44 @@ input[type="color"].input {
   transition: grid-template-columns 0.25s ease;
 }
 
+@media (min-width: 1024px) {
+  .layout-aside {
+    min-width: 420px;
+  }
+
+  .layout-aside .tablet-shell {
+    padding: 2rem 1.5rem;
+    border-radius: calc(var(--radius) + 1rem);
+  }
+
+  .layout-aside .preview-shell {
+    width: 100%;
+    max-width: 420px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+@media (min-width: 1280px) {
+  .layout-aside {
+    min-width: 460px;
+  }
+
+  .layout-aside .preview-shell {
+    max-width: 460px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .layout-aside {
+    min-width: 520px;
+  }
+
+  .layout-aside .preview-shell {
+    max-width: 520px;
+  }
+}
+
 body.preview-collapsed .layout-aside {
   display: none;
 }
